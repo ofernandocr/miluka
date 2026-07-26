@@ -24,7 +24,7 @@ cross join (
 ) as cat(name, icon, color, type)
 where not exists (
   select 1 from public.categories c
-  where c.user_id = auth.users.id and c.name = cat.name
+  where c.user_id = auth.users.id and c.name = cat.name and c.type = cat.type
 );
 
 -- Default income categories
@@ -46,5 +46,5 @@ cross join (
 ) as cat(name, icon, color, type)
 where not exists (
   select 1 from public.categories c
-  where c.user_id = auth.users.id and c.name = cat.name
+  where c.user_id = auth.users.id and c.name = cat.name and c.type = cat.type
 );

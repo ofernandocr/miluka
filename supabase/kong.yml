@@ -1,38 +1,13 @@
 _format_version: "3.0"
-_transform: true
 
 services:
-  - name: studio
-    url: http://studio:3000
-    routes:
-      - name: studio
-        paths:
-          - /
-        strip_path: true
-        hosts:
-          - localhost
-        methods:
-          - GET
-          - POST
-          - PUT
-          - DELETE
-          - PATCH
-          - OPTIONS
-    plugins:
-      - name: key-auth
-        config:
-          key_names:
-            - apikey
-          hide_credentials: false
-      - name: cors
-
   - name: auth
     url: http://auth:9999
     routes:
       - name: auth
         paths:
           - /auth/v1/
-        strip_path: false
+        strip_path: true
         hosts:
           - localhost
     plugins:
@@ -44,7 +19,7 @@ services:
       - name: rest
         paths:
           - /rest/v1/
-        strip_path: false
+        strip_path: true
         hosts:
           - localhost
     plugins:

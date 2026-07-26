@@ -26,7 +26,7 @@ create or replace trigger on_auth_user_created
 -- Categories table
 create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id) on delete cascade,
+  user_id uuid not null default auth.uid() references public.profiles(id) on delete cascade,
   name text not null,
   icon text not null default '📦',
   color text not null default '#6b7280',
@@ -39,7 +39,7 @@ create index if not exists idx_categories_user on public.categories(user_id);
 -- Transactions table
 create table if not exists public.transactions (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id) on delete cascade,
+  user_id uuid not null default auth.uid() references public.profiles(id) on delete cascade,
   category_id uuid not null references public.categories(id) on delete restrict,
   amount decimal(12,2) not null check (amount > 0),
   description text,
