@@ -201,6 +201,11 @@ services:
     volumes:
       - ./web/src:/app/src:Z
       - ./web/index.html:/app/index.html:Z
+      - ./web/vite.config.ts:/app/vite.config.ts:Z
+      - ./web/tsconfig.json:/app/tsconfig.json:Z
+      - ./web/tsconfig.node.json:/app/tsconfig.node.json:Z
+      - ./web/tailwind.config.ts:/app/tailwind.config.ts:Z
+      - ./web/postcss.config.js:/app/postcss.config.js:Z
     environment:
       - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-http://localhost:8000}
       - VITE_SUPABASE_ANON_KEY=${ANON_KEY}
