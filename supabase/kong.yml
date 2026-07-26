@@ -1,0 +1,64 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: studio
+    url: http://studio:3000
+    routes:
+      - name: studio
+        paths:
+          - /
+        strip_path: true
+        hosts:
+          - localhost
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+    plugins:
+      - name: key-auth
+        config:
+          key_names:
+            - apikey
+          hide_credentials: false
+      - name: cors
+
+  - name: auth
+    url: http://auth:9999
+    routes:
+      - name: auth
+        paths:
+          - /auth/v1/
+        strip_path: false
+        hosts:
+          - localhost
+    plugins:
+      - name: cors
+
+  - name: rest
+    url: http://rest:3000
+    routes:
+      - name: rest
+        paths:
+          - /rest/v1/
+        strip_path: false
+        hosts:
+          - localhost
+    plugins:
+      - name: key-auth
+        config:
+          key_names:
+            - apikey
+          hide_credentials: false
+      - name: cors
+
+consumers:
+  - username: anon
+    keyauth_credentials:
+      - key: ${ANON_KEY}
+  - username: service_role
+    keyauth_credentials:
+      - key: ${SERVICE_ROLE_KEY}
