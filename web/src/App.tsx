@@ -7,6 +7,7 @@ import Register from "@/pages/Register"
 import Dashboard from "@/pages/Dashboard"
 import Transactions from "@/pages/Transactions"
 import Categories from "@/pages/Categories"
+import Wallets from "@/pages/Wallets"
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/transactions" element={<Transactions />} />
                     <Route path="/categories" element={<Categories />} />
+                    <Route path="/wallets" element={<Wallets />} />
                   </Routes>
                 </main>
               </div>

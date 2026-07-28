@@ -7,6 +7,18 @@ export interface Profile {
   created_at: string
 }
 
+export interface Wallet {
+  id: string
+  user_id: string
+  name: string
+  currency: string
+  icon: string
+  color: string
+  created_at: string
+}
+
+export type NewWallet = Pick<Wallet, "name" | "currency" | "icon" | "color">
+
 export interface Category {
   id: string
   user_id: string

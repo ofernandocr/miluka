@@ -6,7 +6,7 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 
--- Auto-create profile on signup
+-- Auto-create profile and default wallet on signup
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -15,6 +15,8 @@ as $$
 begin
   insert into public.profiles (id)
   values (new.id);
+  insert into public.wallets (user_id, name, currency)
+  values (new.id, 'General', 'MXN');
   return new;
 end;
 $$;
@@ -22,6 +24,20 @@ $$;
 create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- Wallets table
+create table if not exists public.wallets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references public.profiles(id) on delete cascade,
+  name text not null,
+  currency text not null default 'MXN',
+  icon text not null default '💼',
+  color text not null default '#6b7280',
+  created_at timestamptz not null default now(),
+  unique (user_id, name)
+);
+
+create index if not exists idx_wallets_user on public.wallets(user_id);
 
 -- Categories table
 create table if not exists public.categories (

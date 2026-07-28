@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { BarChart3, Wallet, Tags, LogOut, PiggyBank } from "lucide-react"
+import { BarChart3, Wallet, Tags, LogOut, PiggyBank, Landmark } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,6 +13,7 @@ const navItems = [
   { to: "/", icon: BarChart3, label: "Dashboard" },
   { to: "/transactions", icon: Wallet, label: "Transactions" },
   { to: "/categories", icon: Tags, label: "Categories" },
+  { to: "/wallets", icon: Landmark, label: "Wallets" },
 ] as const
 
 export function Navbar() {
