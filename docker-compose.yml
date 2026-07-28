@@ -209,3 +209,22 @@ services:
     environment:
       - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-http://localhost:8000}
       - VITE_SUPABASE_ANON_KEY=${ANON_KEY}
+
+  test-db:
+    container_name: miluka-test-db
+    image: postgres:17-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      POSTGRES_PASSWORD: test-password
+      POSTGRES_DB: miluka-test
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/99-roles.sql:Z
+      - ./sql/001_schema.sql:/docker-entrypoint-initdb.d/10-schema.sql:Z
+      - ./sql/002_rls.sql:/docker-entrypoint-initdb.d/20-rls.sql:Z

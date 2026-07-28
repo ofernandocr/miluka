@@ -6,6 +6,31 @@
 - **Database:** PostgreSQL (Supabase)
 - **Charts:** Recharts
 - **PWA:** vite-plugin-pwa
+- **Testing:** Vitest + React Testing Library + Mock Service Worker
+- **Test DB:** Docker container for integration tests
+
+## Code Conventions
+- All code, comments, declarations, and documentation must be in **English**
+- Follow existing patterns in the codebase (naming, typing, component structure)
+- Do not add comments to code unless they clarify non-obvious logic
+- Use existing libraries and utilities — never assume a library is available without checking
+
+## Workflow
+- Work is segmented: each session/commit modifies specific modules or functionality
+- No large sweeping changes unless explicitly required
+- Run `npm run lint` (tsc --noEmit) and `npm run test` before every commit
+- If lint or tests fail, fix them before committing
+
+## Testing Strategy
+- **Framework:** Vitest
+- **Location:** `src/__tests__/` — mirrors the src structure
+- **Component tests:** React Testing Library (behavior-focused, not implementation)
+- **Integration tests:** Dedicated Docker service (`miluka-test-db`) with real PostgreSQL + seed data
+- **API mocking:** Mock Service Worker (MSW) for HTTP-level mocking
+- **Coverage targets:**
+  - Hooks: test all states (loading, empty, error, populated)
+  - Components: test rendering, user interactions, edge cases
+  - Pages: test integration between components and hooks
 
 ## Docker Services
 | Service | Image | Port | Description |
@@ -17,21 +42,27 @@
 | meta | supabase/postgres-meta | - | DB metadata |
 | kong | kong/kong | 8000 | API gateway |
 | web | local build | 5173 | React frontend |
+| test-db | postgres:17-alpine | 5433 | Test database |
 
 ## Commands
 - `docker compose up -d` - Start all services
 - `docker compose down` - Stop all services
 - `docker compose logs -f <service>` - View logs
 - `docker compose exec db psql -U postgres` - Direct DB access
+- `npm run test` - Run tests (in web/ or via docker compose exec web)
+- `npm run test:watch` - Watch mode
+- `npm run lint` - TypeScript type-check
 
 ## Database
 - Schema: `sql/001_schema.sql`
 - RLS: `sql/002_rls.sql`
 - Seed: `sql/003_seed.sql`
+- Test seed: `sql/003_seed.sql` + test-specific fixtures in `src/__tests__/fixtures/`
 - Apply SQL via Studio (http://localhost:54323) or `psql`
 
 ## Environment
 - Copy `.env.example` to `.env` before starting
+- `.env.test` for test-specific overrides (test DB URL, etc.)
 - Default Studio credentials: supabase / this_password_is_insecure_and_should_be_updated
 
 ## Development
