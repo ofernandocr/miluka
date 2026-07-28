@@ -22,7 +22,7 @@
 - Default wallet created on signup (name: "General", currency: "MXN")
 
 ### 1.3 Supported Currencies (initial)
-MXN, USD, EUR, CAD, GBP, BRL, COP, ARS — defined in a `currencies` config or enum.
+MXN, USD, EUR, CAD, GBP, BRL, COP, ARS, UYU — defined in `web/src/lib/utils.ts`.
 
 ### 1.4 Exchange Rate (future phase)
 Public API on-demand conversion, user-initiated. No automatic conversion.

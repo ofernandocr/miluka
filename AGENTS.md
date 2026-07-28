@@ -1,5 +1,10 @@
 # miLuka - Expense Tracking App
 
+## Quick Start
+- `REQUIREMENTS.md` — full feature definitions
+- `ARCHITECTURE.md` — project structure, data model, and design decisions
+- Keep both files updated when making changes
+
 ## Stack
 - **Frontend:** React + Vite + TypeScript + Tailwind CSS + shadcn/ui
 - **Backend:** Supabase (self-hosted via Docker)
