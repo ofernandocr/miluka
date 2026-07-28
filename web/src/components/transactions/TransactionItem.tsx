@@ -29,14 +29,6 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
           {transaction.category?.name}
           {" · "}
           {formatDate(transaction.date)}
-          {transaction.wallet && (
-            <>
-              {" · "}
-              <span className="inline-flex items-center gap-1">
-                {transaction.wallet.icon} {transaction.wallet.name}
-              </span>
-            </>
-          )}
         </p>
       </div>
       <div className="text-right">

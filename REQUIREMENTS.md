@@ -98,3 +98,29 @@ Shows expense breakdown by category for the selected wallet(s) and time range.
 - Feature-by-feature commits: each feature is fully implemented and testable before moving to the next
 - Each commit includes: schema migration (if needed) + frontend changes + tests
 - Run `npm run lint` and `npm test` before every commit
+
+---
+
+## 6. Deployment
+
+### 6.1 Production Stack
+- **Frontend:** Cloudflare Pages (static hosting, unlimited bandwidth, free SSL)
+- **Backend:** Supabase Cloud (managed auth, REST API, PostgreSQL)
+- **Mobile:** PWA (Progressive Web App — installable from browser)
+
+### 6.2 Free Tier Limits
+| Service | Limit |
+|---------|-------|
+| Supabase Cloud | 500MB DB, 50K MAU, 5GB bandwidth |
+| Cloudflare Pages | Unlimited bandwidth, 500 builds/month |
+
+### 6.3 Environment Variables
+- `VITE_SUPABASE_URL` — Supabase project URL (e.g., `https://xyz.supabase.co`)
+- `VITE_SUPABASE_ANON_KEY` — Supabase anonymous key (public, safe for client)
+
+### 6.4 PWA Requirements
+- Icons: `web/public/icons/icon-192.png` and `icon-512.png`
+- Manifest configured in `vite.config.ts`
+- Auto-updating service worker via `vite-plugin-pwa`
+
+See `DEPLOY.md` for full deployment instructions.

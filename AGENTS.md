@@ -3,7 +3,8 @@
 ## Quick Start
 - `REQUIREMENTS.md` — full feature definitions
 - `ARCHITECTURE.md` — project structure, data model, and design decisions
-- Keep both files updated when making changes
+- `DEPLOY.md` — production deployment guide (Supabase Cloud + Cloudflare Pages)
+- Keep all documentation updated when making changes
 
 ## Stack
 - **Frontend:** React + Vite + TypeScript + Tailwind CSS + shadcn/ui
@@ -25,6 +26,7 @@
 - No large sweeping changes unless explicitly required
 - Run `npm run lint` (tsc --noEmit) and `npm run test` before every commit
 - If lint or tests fail, fix them before committing
+- **Every project modification must include updating the corresponding documentation** (REQUIREMENTS.md, ARCHITECTURE.md, or both) to reflect the changes made
 
 ## Testing Strategy
 - **Framework:** Vitest

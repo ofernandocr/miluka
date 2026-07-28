@@ -97,9 +97,9 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 - Each page uses hooks directly (useAuth, useTransactions, useCategories, useWallets)
 - Data flows: Page → Hooks → Supabase client → Kong → PostgREST → PostgreSQL
 - Filtering (wallet, time range) done client-side via `useMemo` in the Dashboard component
-  - `filterTransactions(transactions, walletId, timeRange)` — filters by wallet and month
-  - `computeCurrencySummaries(transactions)` — groups income/expense by wallet currency
-  - `computeCategoryData(transactions)` — aggregates expense amounts by category name
+  - `filterByTimeRange(transactions, timeRange)` — filters by current month
+  - `computeWalletSummaries(transactions, wallets)` — groups transactions per wallet, computes income/expense/categoryData per wallet
+  - `computeCategoryData(transactions)` — aggregates expense amounts by category for a single wallet's transactions
 
 ## Formatting Utilities (`web/src/lib/utils.ts`)
 
@@ -110,13 +110,20 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 
 ## Dashboard Filtering
 
-The Dashboard uses three pure functions in `useMemo`:
+The Dashboard uses per-wallet data isolation. When "All wallets" is selected, each wallet gets its own section with summary cards and pie chart:
 
-1. `filterTransactions(tx, walletId, timeRange)` — filters by optional wallet and current month
-2. `computeCurrencySummaries(tx)` — returns `[{ currency, income, expense }]` per wallet currency
-3. `computeCategoryData(tx)` — returns `[{ name, value, color }]` for the pie chart
+1. `filterByTimeRange(tx, timeRange)` — filters transactions by current month
+2. `computeWalletSummaries(tx, wallets)` — returns `[{ wallet, income, expense, categoryData }]` per wallet
+3. `computeCategoryData(tx)` — returns `[{ id, name, icon, value, color }]` for a single wallet's expenses
 
-All filtering is local to the component via React state (`selectedWalletId`, `timeRange`).
+Each wallet section displays:
+- Wallet header (icon, name, currency)
+- Summary cards (Income, Expenses, Balance)
+- Pie chart with clickable legend → navigates to `/transactions?category=<id>`
+
+When a specific wallet is selected via dropdown, only that wallet's section is shown.
+
+Transactions page supports URL-based filters via `useSearchParams`: `?category=<id>` and `?type=<expense|income>`.
 
 ## Testing
 
@@ -125,6 +132,75 @@ All filtering is local to the component via React state (`selectedWalletId`, `ti
 | Component | Vitest + RTL | `src/__tests__/` | Rendering, interactions, edge cases |
 | Hook | Vitest | `src/__tests__/` | All states (loading, empty, error, populated) |
 | Integration | Vitest + test-db container | `src/__tests__/` | Real PostgreSQL queries |
+
+## Deployment Architecture
+
+### Production Stack
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Cloudflare Pages                       │
+│                                                           │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │  React SPA (static files)                           │ │
+│  │  - index.html, JS bundle, CSS                       │ │
+│  │  - PWA service worker                               │ │
+│  │  - Icons (192x192, 512x512)                         │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                           │
+│  Environment Variables:                                   │
+│  - VITE_SUPABASE_URL=https://xyz.supabase.co             │
+│  - VITE_SUPABASE_ANON_KEY=eyJhbG...                      │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼ HTTPS
+┌─────────────────────────────────────────────────────────┐
+│                    Supabase Cloud                         │
+│                                                           │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │  Kong API Gateway (managed)                         │ │
+│  │  ├── /auth/v1/* → GoTrue (Auth)                     │ │
+│  │  └── /rest/v1/* → PostgREST (REST API)              │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                           │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │  PostgreSQL Database                                │ │
+│  │  - profiles, wallets, categories, transactions      │ │
+│  │  - Row Level Security (RLS)                         │ │
+│  │  - Auto-created wallet trigger                      │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                           │
+│  Free Tier: 500MB DB, 50K MAU, 5GB bandwidth            │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Data Flow (Production)
+
+```
+Mobile/Web Browser
+       │
+       ▼
+Cloudflare Pages (static files, CDN)
+       │
+       ▼ HTTPS
+Supabase Cloud (Kong → GoTrue/PostgREST → PostgreSQL)
+```
+
+### Environment Variables
+
+| Variable | Scope | Description |
+|----------|-------|-------------|
+| `VITE_SUPABASE_URL` | Build-time (client) | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Build-time (client) | Supabase anonymous key (public) |
+
+### PWA Configuration
+
+- Manifest: `vite.config.ts` → `VitePWA` plugin
+- Icons: `web/public/icons/` (192x192, 512x512 PNG)
+- Service Worker: Auto-generated by `vite-plugin-pwa`
+- Install: Browser prompts "Add to Home Screen"
+
+See `DEPLOY.md` for full deployment instructions.
 
 ## Future Phases
 
