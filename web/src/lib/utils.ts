@@ -10,6 +10,7 @@ export const CURRENCIES = [
   { code: "BRL", symbol: "R$", name: "Brazilian Real" },
   { code: "COP", symbol: "COL$", name: "Colombian Peso" },
   { code: "ARS", symbol: "AR$", name: "Argentine Peso" },
+  { code: "UYU", symbol: "$U", name: "Uruguayan Peso" },
 ] as const
 
 export type CurrencyCode = (typeof CURRENCIES)[number]["code"]

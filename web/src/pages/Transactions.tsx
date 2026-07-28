@@ -3,6 +3,7 @@ import { Plus } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
+import { useWallets } from "@/hooks/useWallets"
 import { Button } from "@/components/ui/button"
 import { TransactionList } from "@/components/transactions/TransactionList"
 import { TransactionForm } from "@/components/transactions/TransactionForm"
@@ -14,6 +15,7 @@ export default function Transactions() {
   const { transactions, loading, createTransaction, updateTransaction, deleteTransaction } =
     useTransactions(user?.id)
   const { categories } = useCategories(user?.id)
+  const { wallets } = useWallets(user?.id)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<string | null>(null)
 
@@ -71,6 +73,7 @@ export default function Transactions() {
           </DialogHeader>
           <TransactionForm
             categories={categories}
+            wallets={wallets}
             initialData={currentTx}
             onSubmit={editingTransaction ? handleUpdate : handleCreate}
             onCancel={() => { setDialogOpen(false); setEditingTransaction(null) }}

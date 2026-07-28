@@ -11,6 +11,7 @@ interface TransactionItemProps {
 
 export function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps) {
   const isExpense = transaction.type === "expense"
+  const currency = transaction.wallet?.currency ?? "MXN"
 
   return (
     <div className="flex items-center gap-4 rounded-lg border bg-card p-4">
@@ -28,11 +29,19 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
           {transaction.category?.name}
           {" · "}
           {formatDate(transaction.date)}
+          {transaction.wallet && (
+            <>
+              {" · "}
+              <span className="inline-flex items-center gap-1">
+                {transaction.wallet.icon} {transaction.wallet.name}
+              </span>
+            </>
+          )}
         </p>
       </div>
       <div className="text-right">
         <p className={`font-semibold tabular-nums ${isExpense ? "text-red-500" : "text-green-500"}`}>
-          {isExpense ? "-" : "+"}{formatCurrency(Number(transaction.amount))}
+          {isExpense ? "-" : "+"}{formatCurrency(Number(transaction.amount), currency)}
         </p>
       </div>
       <div className="flex gap-1">

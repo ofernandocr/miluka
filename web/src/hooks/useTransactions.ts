@@ -10,7 +10,7 @@ export function useTransactions(userId: string | undefined) {
     if (!userId) return
     const { data, error } = await supabase
       .from("transactions")
-      .select("*, category:categories(*)")
+      .select("*, category:categories(*), wallet:wallets(*)")
       .eq("user_id", userId)
       .order("date", { ascending: false })
       .order("created_at", { ascending: false })

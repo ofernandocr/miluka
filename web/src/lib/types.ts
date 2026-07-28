@@ -32,6 +32,7 @@ export interface Category {
 export interface Transaction {
   id: string
   user_id: string
+  wallet_id: string | null
   category_id: string
   amount: number
   description: string | null
@@ -40,8 +41,9 @@ export interface Transaction {
   created_at: string
   updated_at: string
   category?: Category
+  wallet?: Wallet
 }
 
-export type NewTransaction = Pick<Transaction, "amount" | "description" | "date" | "type" | "category_id">
+export type NewTransaction = Pick<Transaction, "amount" | "description" | "date" | "type" | "category_id" | "wallet_id">
 
 export type NewCategory = Pick<Category, "name" | "icon" | "color" | "type">
