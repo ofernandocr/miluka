@@ -67,6 +67,7 @@ miluka/
 - `wallets(user_id, name)` — unique wallet names per user
 - `transactions.amount > 0` — positive amounts only
 - `transactions.type IN ('expense', 'income')`
+- `profiles.currency` is kept for backwards compatibility; wallets table is the source of truth for transaction currency
 
 ### Default Wallet
 - Created automatically via trigger `on_auth_user_created`
@@ -95,7 +96,27 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 - No global state store (Redux, Zustand, etc.)
 - Each page uses hooks directly (useAuth, useTransactions, useCategories, useWallets)
 - Data flows: Page → Hooks → Supabase client → Kong → PostgREST → PostgreSQL
-- Filtering (wallet, time range) done client-side via `useMemo`
+- Filtering (wallet, time range) done client-side via `useMemo` in the Dashboard component
+  - `filterTransactions(transactions, walletId, timeRange)` — filters by wallet and month
+  - `computeCurrencySummaries(transactions)` — groups income/expense by wallet currency
+  - `computeCategoryData(transactions)` — aggregates expense amounts by category name
+
+## Formatting Utilities (`web/src/lib/utils.ts`)
+
+- `formatCurrency(amount, currency = "MXN")` — uses `Intl.NumberFormat` for locale-aware display
+- `getCurrencySymbol(code)` — returns symbol from the `CURRENCIES` constant (e.g. "MX$", "$", "€")
+- `CURRENCIES` — array of 9 supported currencies: MXN, USD, EUR, CAD, GBP, BRL, COP, ARS, UYU
+- `formatDate(date)` — formats ISO date string to human-readable (e.g. "Jul 26, 2026")
+
+## Dashboard Filtering
+
+The Dashboard uses three pure functions in `useMemo`:
+
+1. `filterTransactions(tx, walletId, timeRange)` — filters by optional wallet and current month
+2. `computeCurrencySummaries(tx)` — returns `[{ currency, income, expense }]` per wallet currency
+3. `computeCategoryData(tx)` — returns `[{ name, value, color }]` for the pie chart
+
+All filtering is local to the component via React state (`selectedWalletId`, `timeRange`).
 
 ## Testing
 

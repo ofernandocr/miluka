@@ -59,11 +59,20 @@
 - `npm run lint` - TypeScript type-check
 
 ## Database
-- Schema: `sql/001_schema.sql`
+- Schema: `sql/001_schema.sql` (profiles, categories, transactions, wallets)
 - RLS: `sql/002_rls.sql`
-- Seed: `sql/003_seed.sql`
+- Seed: `sql/003_seed.sql` (17 categories — run after user signs up)
+- Migrations: `sql/004_wallets.sql`, `sql/005_transactions_wallet.sql`
 - Test seed: `sql/003_seed.sql` + test-specific fixtures in `src/__tests__/fixtures/`
 - Apply SQL via Studio (http://localhost:54323) or `psql`
+- After schema changes, reload PostgREST cache: `psql -c "NOTIFY pgrst, 'reload schema';"`
+
+## First-Time Setup
+1. `cp .env.example .env`
+2. `docker compose up -d` (waits ~30s for all services to become healthy)
+3. Sign up at http://localhost:5173/register
+4. `docker compose exec -T db psql -U postgres < sql/003_seed.sql`
+5. Login and use the app
 
 ## Environment
 - Copy `.env.example` to `.env` before starting
