@@ -54,37 +54,58 @@ Add `wallet_id` to the existing `transactions` table:
 
 ---
 
-## 3. Dashboard
+## 3. Categories
 
-### 3.1 Wallet Filter
+### 3.1 Shared Defaults Model
+- **Default categories** have `user_id = NULL` — visible to all users globally
+- **Custom categories** have `user_id = <uuid>` — private to the user who created them
+- Users see all default categories + their own custom categories
+- Default categories cannot be edited or deleted by users
+- Custom categories can be fully managed (CRUD) by their owner
+
+### 3.2 Default Categories (17 total)
+**Expense (12):** Food, Transport, Housing, Utilities, Health, Entertainment, Education, Shopping, Travel, Pets, Gifts, Other
+
+**Income (5):** Salary, Freelance, Investments, Gifts, Other
+
+### 3.3 Custom Categories
+- Users can create additional categories for their specific needs
+- Custom categories have: name, icon, color, type (expense/income)
+- Only visible to the user who created them (enforced via RLS)
+
+---
+
+## 4. Dashboard
+
+### 4.1 Wallet Filter
 - By default: consolidated view of all wallets
 - Dropdown/selector to filter by a specific wallet
 - When filtered, only that wallet's transactions are shown
 
-### 3.2 Time Range
+### 4.2 Time Range
 - Toggle: "This month" / "All time"
 - "This month" = current month (from 1st to today)
 - "All time" = lifetime (no date filter)
 
-### 3.3 Summary Cards
+### 4.3 Summary Cards
 - Income (green) — total income in selected time range
 - Expenses (red) — total expenses in selected time range
 - Balance (green/red) — income minus expenses
 
 Each amount displayed with its currency symbol. If multiple wallets visible, amounts grouped by currency.
 
-### 3.4 Spending by Category (PieChart)
+### 4.4 Spending by Category (PieChart)
 Shows expense breakdown by category for the selected wallet(s) and time range.
 
 ---
 
-## 4. Bank Notification Detection (future phase)
+## 5. Bank Notification Detection (future phase)
 
-### 4.1 Platforms
+### 5.1 Platforms
 - Android: NotificationListenerService
 - iOS: Notification Service Extension (limited)
 
-### 4.2 Behavior
+### 5.2 Behavior
 - Detect incoming notifications from known banking apps
 - Parse amount, merchant, and date
 - Create a draft transaction for user confirmation
@@ -92,7 +113,7 @@ Shows expense breakdown by category for the selected wallet(s) and time range.
 
 ---
 
-## 5. Code Conventions
+## 6. Code Conventions
 
 - All code, comments, commits, and docs in English
 - Feature-by-feature commits: each feature is fully implemented and testable before moving to the next
@@ -101,24 +122,24 @@ Shows expense breakdown by category for the selected wallet(s) and time range.
 
 ---
 
-## 6. Deployment
+## 7. Deployment
 
-### 6.1 Production Stack
+### 7.1 Production Stack
 - **Frontend:** Cloudflare Pages (static hosting, unlimited bandwidth, free SSL)
 - **Backend:** Supabase Cloud (managed auth, REST API, PostgreSQL)
 - **Mobile:** PWA (Progressive Web App — installable from browser)
 
-### 6.2 Free Tier Limits
+### 7.2 Free Tier Limits
 | Service | Limit |
 |---------|-------|
 | Supabase Cloud | 500MB DB, 50K MAU, 5GB bandwidth |
 | Cloudflare Pages | Unlimited bandwidth, 500 builds/month |
 
-### 6.3 Environment Variables
+### 7.3 Environment Variables
 - `VITE_SUPABASE_URL` — Supabase project URL (e.g., `https://xyz.supabase.co`)
 - `VITE_SUPABASE_ANON_KEY` — Supabase anonymous key (public, safe for client)
 
-### 6.4 PWA Requirements
+### 7.4 PWA Requirements
 - Icons: `web/public/icons/icon-192.png` and `icon-512.png`
 - Manifest configured in `vite.config.ts`
 - Auto-updating service worker via `vite-plugin-pwa`

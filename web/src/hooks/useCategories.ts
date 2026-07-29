@@ -11,7 +11,7 @@ export function useCategories(userId: string | undefined) {
     const { data, error } = await supabase
       .from("categories")
       .select("*")
-      .eq("user_id", userId)
+      .or(`user_id.is.null,user_id.eq.${userId}`)
       .order("name")
     if (error) throw error
     setCategories(data ?? [])

@@ -21,7 +21,7 @@ export type NewWallet = Pick<Wallet, "name" | "currency" | "icon" | "color">
 
 export interface Category {
   id: string
-  user_id: string
+  user_id: string | null
   name: string
   icon: string
   color: string

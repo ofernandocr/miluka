@@ -60,7 +60,7 @@ miluka/
 |---------------|--------------------------------------------|-----|-------|
 | `profiles`    | 1:1 with `auth.users`                      | Yes | User identity data |
 | `wallets`     | N:1 profiles, 1:N transactions             | Yes | Each wallet has its own currency |
-| `categories`  | N:1 profiles, 1:N transactions             | Yes | type: 'expense' or 'income' |
+| `categories`  | N:1 profiles (nullable), 1:N transactions  | Yes | Shared defaults (user_id=NULL) + user-specific |
 | `transactions`| N:1 profiles, N:1 wallets, N:1 categories  | Yes | wallet_id nullable (backfilled to default) |
 
 ### Key Constraints
@@ -72,6 +72,14 @@ miluka/
 ### Default Wallet
 - Created automatically via trigger `on_auth_user_created`
 - Name: "General", Currency: "MXN"
+
+### Categories Model (Shared Defaults)
+- **Default categories** have `user_id = NULL` — visible to all users, cannot be modified
+- **Custom categories** have `user_id = <uuid>` — private to the user who created them
+- Users see all defaults + their own custom categories
+- RLS ensures users can only INSERT/UPDATE/DELETE their own categories
+- 17 default categories: 12 expense + 5 income (defined in `sql/007_shared_categories.sql`)
+- No category seeding on signup — defaults are global, not per-user
 
 ## Auth Flow
 
