@@ -16,11 +16,12 @@ create policy "Users can insert own profile"
   on public.profiles for insert
   with check (auth.uid() = id);
 
--- Categories: users can CRUD their own categories
-create policy "Users can read own categories"
+-- Categories: users can read shared defaults + their own custom categories
+create policy "Users can read categories"
   on public.categories for select
-  using (auth.uid() = user_id);
+  using (user_id IS NULL OR auth.uid() = user_id);
 
+-- Categories: users can only create/edit/delete their own custom categories
 create policy "Users can create own categories"
   on public.categories for insert
   with check (auth.uid() = user_id);

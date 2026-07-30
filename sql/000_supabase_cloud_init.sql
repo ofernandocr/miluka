@@ -29,14 +29,16 @@ create table if not exists public.wallets (
 create index if not exists idx_wallets_user on public.wallets(user_id);
 
 -- Categories table
+-- user_id IS NULL for shared defaults, set for user-specific custom categories
 create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null default auth.uid() references public.profiles(id) on delete cascade,
+  user_id uuid references public.profiles(id) on delete set null,
   name text not null,
   icon text not null default '📦',
   color text not null default '#6b7280',
   type text not null check (type in ('expense', 'income')),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (user_id, name, type)
 );
 
 create index if not exists idx_categories_user on public.categories(user_id);
@@ -119,12 +121,12 @@ create policy "Users can delete own wallets"
   on public.wallets for delete
   using (auth.uid() = user_id);
 
--- 5. RLS Policies — Categories
+-- 5. RLS Policies — Categories (shared defaults + user-specific)
 -- ============================================================
 
-create policy "Users can read own categories"
+create policy "Users can read categories"
   on public.categories for select
-  using (auth.uid() = user_id);
+  using (user_id IS NULL OR auth.uid() = user_id);
 
 create policy "Users can create own categories"
   on public.categories for insert
@@ -157,56 +159,30 @@ create policy "Users can delete own transactions"
   on public.transactions for delete
   using (auth.uid() = user_id);
 
--- 7. Seed default categories (run AFTER user signs up)
+-- 7. Seed default categories (shared for all users)
 -- ============================================================
 
--- Default expense categories
-insert into public.categories (user_id, name, icon, color, type)
-select
-  id as user_id,
-  cat.name,
-  cat.icon,
-  cat.color,
-  cat.type
-from auth.users
-cross join (
-  values
-    ('Food', '🍔', '#ef4444', 'expense'),
-    ('Transport', '🚗', '#f97316', 'expense'),
-    ('Housing', '🏠', '#eab308', 'expense'),
-    ('Utilities', '💡', '#06b6d4', 'expense'),
-    ('Health', '🏥', '#22c55e', 'expense'),
-    ('Entertainment', '🎬', '#8b5cf6', 'expense'),
-    ('Education', '📚', '#3b82f6', 'expense'),
-    ('Shopping', '🛒', '#ec4899', 'expense'),
-    ('Travel', '✈️', '#14b8a6', 'expense'),
-    ('Pets', '🐾', '#f97316', 'expense'),
-    ('Gifts', '🎁', '#ef4444', 'expense'),
-    ('Other', '📦', '#6b7280', 'expense')
-) as cat(name, icon, color, type)
-where not exists (
-  select 1 from public.categories c
-  where c.user_id = auth.users.id and c.name = cat.name and c.type = cat.type
-);
+-- Expense categories
+insert into public.categories (user_id, name, icon, color, type) values
+  (NULL, 'Food', '🍔', '#ef4444', 'expense'),
+  (NULL, 'Transport', '🚗', '#f97316', 'expense'),
+  (NULL, 'Housing', '🏠', '#eab308', 'expense'),
+  (NULL, 'Utilities', '💡', '#06b6d4', 'expense'),
+  (NULL, 'Health', '🏥', '#22c55e', 'expense'),
+  (NULL, 'Entertainment', '🎬', '#8b5cf6', 'expense'),
+  (NULL, 'Education', '📚', '#3b82f6', 'expense'),
+  (NULL, 'Shopping', '🛒', '#ec4899', 'expense'),
+  (NULL, 'Travel', '✈️', '#14b8a6', 'expense'),
+  (NULL, 'Pets', '🐾', '#f97316', 'expense'),
+  (NULL, 'Gifts', '🎁', '#ef4444', 'expense'),
+  (NULL, 'Other', '📦', '#6b7280', 'expense')
+on conflict (user_id, name, type) do nothing;
 
--- Default income categories
-insert into public.categories (user_id, name, icon, color, type)
-select
-  id as user_id,
-  cat.name,
-  cat.icon,
-  cat.color,
-  cat.type
-from auth.users
-cross join (
-  values
-    ('Salary', '💰', '#22c55e', 'income'),
-    ('Freelance', '💻', '#3b82f6', 'income'),
-    ('Investments', '📈', '#8b5cf6', 'income'),
-    ('Gifts', '🎁', '#ec4899', 'income'),
-    ('Other', '📦', '#6b7280', 'income')
-) as cat(name, icon, color, type)
-where not exists (
-  select 1 from public.categories c
-  where c.user_id = auth.users.id and c.name = cat.name and c.type = cat.type
-);
+-- Income categories
+insert into public.categories (user_id, name, icon, color, type) values
+  (NULL, 'Salary', '💰', '#22c55e', 'income'),
+  (NULL, 'Freelance', '💻', '#3b82f6', 'income'),
+  (NULL, 'Investments', '📈', '#8b5cf6', 'income'),
+  (NULL, 'Gifts', '🎁', '#ec4899', 'income'),
+  (NULL, 'Other', '📦', '#6b7280', 'income')
+on conflict (user_id, name, type) do nothing;

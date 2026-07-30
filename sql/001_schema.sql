@@ -40,14 +40,16 @@ create table if not exists public.wallets (
 create index if not exists idx_wallets_user on public.wallets(user_id);
 
 -- Categories table
+-- user_id IS NULL for shared defaults, set for user-specific custom categories
 create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null default auth.uid() references public.profiles(id) on delete cascade,
+  user_id uuid references public.profiles(id) on delete set null,
   name text not null,
   icon text not null default '📦',
   color text not null default '#6b7280',
   type text not null check (type in ('expense', 'income')),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (user_id, name, type)
 );
 
 create index if not exists idx_categories_user on public.categories(user_id);
