@@ -19,15 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { TransactionForm } from "@/components/transactions/TransactionForm"
 import { computeBudgetSpent } from "@/components/budgets/BudgetList"
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Cell,
-  ResponsiveContainer,
-} from "recharts"
+
 import type { Transaction, Wallet, NewTransaction, Budget } from "@/lib/types"
 
 type TimeRange = "month" | "all"
@@ -334,63 +326,37 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle className="text-base">Spending by Category</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-                    <div className="flex-shrink-0" style={{ width: 280, height: Math.max(200, summary.categoryData.length * 36) }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={summary.categoryData}
-                          layout="vertical"
-                          margin={{ top: 0, right: 8, left: 0, bottom: 0 }}
+                <CardContent className="space-y-2">
+                  {[...summary.categoryData]
+                    .sort((a, b) => b.value - a.value)
+                    .map((cat) => {
+                      const pct = totalExpense > 0 ? (cat.value / totalExpense) * 100 : 0
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => handleCategoryClick(cat.id)}
+                          className="w-full text-left transition-colors hover:bg-accent/50 rounded-lg px-3 py-2"
                         >
-                          <XAxis type="number" hide />
-                          <YAxis
-                            type="category"
-                            dataKey="name"
-                            width={100}
-                            tick={{ fontSize: 12 }}
-                          />
-                          <Tooltip
-                            formatter={(value: number) =>
-                              formatCurrency(value, summary.wallet.currency)
-                            }
-                          />
-                          <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                            {summary.categoryData.map((entry, i) => (
-                              <Cell key={i} fill={entry.color} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <div className="flex-1 space-y-1">
-                      {summary.categoryData.map((cat) => {
-                        const pct = totalExpense > 0 ? (cat.value / totalExpense) * 100 : 0
-                        return (
-                          <button
-                            key={cat.id}
-                            onClick={() => handleCategoryClick(cat.id)}
-                            className="flex w-full items-center gap-3 rounded-lg px-3 py-1.5 text-left transition-colors hover:bg-accent/50"
-                          >
-                            <div
-                              className="h-3 w-3 flex-shrink-0 rounded-full"
-                              style={{ backgroundColor: cat.color }}
-                            />
-                            <span className="flex-1 truncate text-sm font-medium">
-                              {cat.icon} {cat.name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold" style={{ color: cat.color }}>
                               {pct.toFixed(0)}%
+                            </span>
+                            <span className="flex-1 mx-3 truncate text-sm font-medium">
+                              {cat.icon} {cat.name}
                             </span>
                             <span className="text-sm font-semibold tabular-nums">
                               {formatCurrency(cat.value, summary.wallet.currency)}
                             </span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
+                          </div>
+                          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: cat.color }}
+                            />
+                          </div>
+                        </button>
+                      )
+                    })}
                 </CardContent>
               </Card>
             )}
