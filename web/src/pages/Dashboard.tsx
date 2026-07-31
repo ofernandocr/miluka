@@ -62,6 +62,59 @@ function computeCategoryData(transactions: Transaction[]): CategoryDataItem[] {
   return Object.values(byCategory).sort((a, b) => b.value - a.value)
 }
 
+interface UnifiedCategoryItem {
+  id: string
+  name: string
+  icon: string
+  color: string
+  spent: number
+  budgetAmount: number | null
+  budgetPct: number | null
+  pctOfTotal: number
+}
+
+function buildUnifiedCategories(
+  categoryData: CategoryDataItem[],
+  budgets: { budget: Budget; spent: number }[],
+  totalExpense: number
+): UnifiedCategoryItem[] {
+  const budgetByCategory = new Map<string, { budget: Budget; spent: number }>()
+  for (const entry of budgets) {
+    if (entry.budget.category_id) {
+      budgetByCategory.set(entry.budget.category_id, entry)
+    }
+  }
+
+  return categoryData.map((cat) => {
+    const budgetEntry = budgetByCategory.get(cat.id)
+    if (budgetEntry) {
+      const budgetPct = budgetEntry.budget.amount > 0
+        ? (budgetEntry.spent / budgetEntry.budget.amount) * 100
+        : 0
+      return {
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        color: cat.color,
+        spent: cat.value,
+        budgetAmount: budgetEntry.budget.amount,
+        budgetPct,
+        pctOfTotal: totalExpense > 0 ? (cat.value / totalExpense) * 100 : 0,
+      }
+    }
+    return {
+      id: cat.id,
+      name: cat.name,
+      icon: cat.icon,
+      color: cat.color,
+      spent: cat.value,
+      budgetAmount: null,
+      budgetPct: null,
+      pctOfTotal: totalExpense > 0 ? (cat.value / totalExpense) * 100 : 0,
+    }
+  })
+}
+
 interface WalletSummary {
   wallet: Wallet
   income: number
@@ -112,35 +165,6 @@ function getProgressTextColor(pct: number): string {
   if (pct > 85) return "text-orange-500"
   if (pct > 60) return "text-yellow-500"
   return "text-green-500"
-}
-
-function BudgetOverviewItem({ budget, spent, currency }: { budget: Budget; spent: number; currency: string }) {
-  const pct = budget.amount > 0 ? (spent / budget.amount) * 100 : 0
-  const icon = budget.category?.icon ?? budget.wallet?.icon ?? "📊"
-  const name = budget.category?.name ?? budget.wallet?.name ?? "Budget"
-
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs">
-        <span className="truncate font-medium">
-          {icon} {name}
-        </span>
-        <span className={getProgressTextColor(pct)}>
-          {pct.toFixed(0)}%
-        </span>
-      </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-        <div
-          className={`h-full rounded-full transition-all ${getProgressColor(pct)}`}
-          style={{ width: `${Math.min(pct, 100)}%` }}
-        />
-      </div>
-      <div className="flex justify-between text-[10px] text-muted-foreground">
-        <span>{formatCurrency(spent, currency)}</span>
-        <span>{formatCurrency(budget.amount, currency)}</span>
-      </div>
-    </div>
-  )
 }
 
 export default function Dashboard() {
@@ -252,6 +276,7 @@ export default function Dashboard() {
         const totalExpense = summary.categoryData.reduce((s, c) => s + c.value, 0)
         const balance = summary.income - summary.expense
         const budgetsForWallet = walletBudgets.get(summary.wallet.id) ?? []
+        const unified = buildUnifiedCategories(summary.categoryData, budgetsForWallet, totalExpense)
 
         return (
           <div key={summary.wallet.id} className="space-y-4">
@@ -303,70 +328,74 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {budgetsForWallet.length > 0 && (
-              <Card className="cursor-pointer" onClick={() => navigate("/budgets")}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Budgets</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {budgetsForWallet.map(({ budget, spent }) => (
-                    <BudgetOverviewItem
-                      key={budget.id}
-                      budget={budget}
-                      spent={spent}
-                      currency={summary.wallet.currency}
-                    />
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-
-            {summary.categoryData.length > 0 && (
+            {unified.length > 0 ? (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Spending by Category</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {[...summary.categoryData]
-                    .sort((a, b) => b.value - a.value)
-                    .map((cat) => {
-                      const pct = totalExpense > 0 ? (cat.value / totalExpense) * 100 : 0
-                      return (
-                        <button
-                          key={cat.id}
-                          onClick={() => handleCategoryClick(cat.id)}
-                          className="w-full text-left transition-colors hover:bg-accent/50 rounded-lg px-3 py-2"
-                        >
-                          <div className="flex items-center justify-between">
+                  {unified.map((cat) => {
+                    const hasBudget = cat.budgetAmount !== null
+                    const barPct = hasBudget ? cat.budgetPct! : cat.pctOfTotal
+                    const barColor = hasBudget ? getProgressColor(barPct) : ""
+                    const barStyle = hasBudget
+                      ? { width: `${Math.min(barPct, 100)}%` }
+                      : { width: `${Math.min(cat.pctOfTotal, 100)}%`, backgroundColor: cat.color }
+
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => handleCategoryClick(cat.id)}
+                        className="w-full text-left transition-colors hover:bg-accent/50 rounded-lg px-3 py-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          {hasBudget ? (
+                            <span className={`text-sm font-semibold ${getProgressTextColor(barPct)}`}>
+                              {barPct.toFixed(0)}%
+                            </span>
+                          ) : (
                             <span className="text-sm font-semibold" style={{ color: cat.color }}>
-                              {pct.toFixed(0)}%
+                              {cat.pctOfTotal.toFixed(0)}%
                             </span>
-                            <span className="flex-1 mx-3 truncate text-sm font-medium">
-                              {cat.icon} {cat.name}
-                            </span>
-                            <span className="text-sm font-semibold tabular-nums">
-                              {formatCurrency(cat.value, summary.wallet.currency)}
-                            </span>
-                          </div>
-                          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-                            <div
-                              className="h-full rounded-full transition-all"
-                              style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: cat.color }}
-                            />
-                          </div>
-                        </button>
-                      )
-                    })}
+                          )}
+                          <span className="flex-1 mx-3 truncate text-sm font-medium">
+                            {cat.icon} {cat.name}
+                          </span>
+                          <span className="text-sm font-semibold tabular-nums">
+                            {formatCurrency(cat.spent, summary.wallet.currency)}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                          <div
+                            className={`h-full rounded-full transition-all ${hasBudget ? barColor : ""}`}
+                            style={barStyle}
+                          />
+                        </div>
+                        {hasBudget && (
+                          <p className="mt-0.5 text-right text-[10px] text-muted-foreground">
+                            {formatCurrency(cat.spent, summary.wallet.currency)} / {formatCurrency(cat.budgetAmount!, summary.wallet.currency)}
+                          </p>
+                        )}
+                      </button>
+                    )
+                  })}
                 </CardContent>
               </Card>
-            )}
-
-            {summary.categoryData.length === 0 && (
+            ) : (
               <Card>
                 <CardContent className="py-8 text-center text-sm text-muted-foreground">
                   No expenses in this wallet for the selected period.
                 </CardContent>
               </Card>
+            )}
+
+            {budgetsForWallet.length > 0 && (
+              <button
+                onClick={() => navigate("/budgets")}
+                className="w-full rounded-lg border border-dashed py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+              >
+                Manage budgets →
+              </button>
             )}
           </div>
         )
