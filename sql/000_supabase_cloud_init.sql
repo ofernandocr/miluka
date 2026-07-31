@@ -67,6 +67,8 @@ create table if not exists public.budgets (
   amount decimal(12,2) not null check (amount > 0),
   category_id uuid references public.categories(id) on delete set null,
   wallet_id uuid references public.wallets(id) on delete set null,
+  start_date date,
+  end_date date,
   created_at timestamptz not null default now()
 );
 
