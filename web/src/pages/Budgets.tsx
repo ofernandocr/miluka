@@ -1,0 +1,111 @@
+import { useState, useMemo } from "react"
+import { Plus } from "lucide-react"
+import { useAuth } from "@/hooks/useAuth"
+import { useBudgets } from "@/hooks/useBudgets"
+import { useCategories } from "@/hooks/useCategories"
+import { useWallets } from "@/hooks/useWallets"
+import { useTransactions } from "@/hooks/useTransactions"
+import { Button } from "@/components/ui/button"
+import { BudgetForm } from "@/components/budgets/BudgetForm"
+import { BudgetList, computeBudgetSpent } from "@/components/budgets/BudgetList"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import type { NewBudget, Transaction } from "@/lib/types"
+
+function filterCurrentMonthExpenses(transactions: Transaction[]): Transaction[] {
+  const now = new Date()
+  const month = now.getMonth()
+  const year = now.getFullYear()
+  return transactions.filter((t) => {
+    const d = new Date(t.date)
+    return d.getMonth() === month && d.getFullYear() === year && t.type === "expense"
+  })
+}
+
+export default function Budgets() {
+  const { user } = useAuth()
+  const { budgets, loading: budgetsLoading, createBudget, updateBudget, deleteBudget } = useBudgets(user?.id)
+  const { categories } = useCategories(user?.id)
+  const { wallets } = useWallets(user?.id)
+  const { transactions, loading: txLoading } = useTransactions(user?.id)
+
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingBudget, setEditingBudget] = useState<string | null>(null)
+
+  const currentMonthExpenses = useMemo(
+    () => filterCurrentMonthExpenses(transactions),
+    [transactions]
+  )
+
+  const budgetsWithSpent = useMemo(() => {
+    return budgets.map((b) => ({
+      ...b,
+      spent: computeBudgetSpent(b, currentMonthExpenses),
+    }))
+  }, [budgets, currentMonthExpenses])
+
+  const handleCreate = async (data: NewBudget) => {
+    await createBudget(data)
+    setDialogOpen(false)
+  }
+
+  const handleUpdate = async (data: NewBudget) => {
+    if (!editingBudget) return
+    await updateBudget(editingBudget, data)
+    setEditingBudget(null)
+  }
+
+  const handleDelete = async (id: string) => {
+    await deleteBudget(id)
+  }
+
+  const loading = budgetsLoading || txLoading
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  const currentBudget = editingBudget
+    ? budgets.find((b) => b.id === editingBudget)
+    : undefined
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Budgets</h1>
+        <Button onClick={() => setDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Budget
+        </Button>
+      </div>
+
+      <p className="text-sm text-muted-foreground">
+        Set monthly spending limits. Current period: {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+      </p>
+
+      <BudgetList
+        budgets={budgetsWithSpent}
+        onEdit={(id) => setEditingBudget(id)}
+        onDelete={handleDelete}
+      />
+
+      <Dialog open={dialogOpen || !!editingBudget} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingBudget(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingBudget ? "Edit Budget" : "New Budget"}</DialogTitle>
+          </DialogHeader>
+          <BudgetForm
+            categories={categories}
+            wallets={wallets}
+            initialData={currentBudget}
+            onSubmit={editingBudget ? handleUpdate : handleCreate}
+            onCancel={() => { setDialogOpen(false); setEditingBudget(null) }}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

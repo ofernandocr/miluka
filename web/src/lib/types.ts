@@ -47,3 +47,16 @@ export interface Transaction {
 export type NewTransaction = Pick<Transaction, "amount" | "description" | "date" | "type" | "category_id" | "wallet_id">
 
 export type NewCategory = Pick<Category, "name" | "icon" | "color" | "type">
+
+export interface Budget {
+  id: string
+  user_id: string
+  amount: number
+  category_id: string | null
+  wallet_id: string | null
+  created_at: string
+  category?: Category
+  wallet?: Wallet
+}
+
+export type NewBudget = Pick<Budget, "amount" | "category_id" | "wallet_id">
