@@ -34,7 +34,9 @@ function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & 
   const currency = budget.wallet?.currency ?? "MXN"
 
   const icon = budget.category?.icon ?? budget.wallet?.icon ?? "📊"
-  const name = budget.category?.name ?? budget.wallet?.name ?? "Overall Budget"
+  const name = budget.category
+    ? `${budget.category.icon} ${budget.category.name} — ${budget.wallet?.icon ?? ""} ${budget.wallet?.name ?? ""}`
+    : `${budget.wallet?.icon ?? "💼"} ${budget.wallet?.name ?? "Wallet"}`
 
   return (
     <div className="flex items-center gap-3 rounded-lg border p-3">
@@ -83,8 +85,6 @@ function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & 
 }
 
 export function BudgetList({ budgets, onEdit, onDelete }: BudgetListProps) {
-  const overall = budgets.filter((b) => !b.category_id && !b.wallet_id)
-  const byCategory = budgets.filter((b) => b.category_id && !b.wallet_id)
   const byWallet = budgets.filter((b) => !b.category_id && b.wallet_id)
   const categoryWallet = budgets.filter((b) => b.category_id && b.wallet_id)
 
@@ -114,10 +114,8 @@ export function BudgetList({ budgets, onEdit, onDelete }: BudgetListProps) {
 
   return (
     <div className="space-y-4">
-      {renderSection("Overall", overall)}
-      {renderSection("By Category", byCategory)}
       {renderSection("By Wallet", byWallet)}
-      {renderSection("Category + Wallet", categoryWallet)}
+      {renderSection("By Category + Wallet", categoryWallet)}
     </div>
   )
 }

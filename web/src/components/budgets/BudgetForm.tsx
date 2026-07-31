@@ -12,7 +12,7 @@ import {
 import type { Budget, NewBudget, Category, Wallet } from "@/lib/types"
 import { getCurrencySymbol } from "@/lib/utils"
 
-type BudgetType = "overall" | "category" | "wallet" | "category_wallet"
+type BudgetType = "wallet" | "category_wallet"
 
 interface BudgetFormProps {
   categories: Category[]
@@ -24,14 +24,12 @@ interface BudgetFormProps {
 
 function getBudgetType(budget: Budget): BudgetType {
   if (budget.category_id && budget.wallet_id) return "category_wallet"
-  if (budget.category_id) return "category"
-  if (budget.wallet_id) return "wallet"
-  return "overall"
+  return "wallet"
 }
 
 export function BudgetForm({ categories, wallets, initialData, onSubmit, onCancel }: BudgetFormProps) {
   const [budgetType, setBudgetType] = useState<BudgetType>(
-    initialData ? getBudgetType(initialData) : "overall"
+    initialData ? getBudgetType(initialData) : "wallet"
   )
   const [amount, setAmount] = useState(initialData ? String(initialData.amount) : "")
   const [categoryId, setCategoryId] = useState(initialData?.category_id ?? "")
@@ -48,8 +46,8 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
     try {
       await onSubmit({
         amount: Number(amount),
-        category_id: budgetType === "category" || budgetType === "category_wallet" ? categoryId || null : null,
-        wallet_id: budgetType === "wallet" || budgetType === "category_wallet" ? walletId || null : null,
+        category_id: budgetType === "category_wallet" ? categoryId || null : null,
+        wallet_id: walletId || null,
       })
     } finally {
       setSubmitting(false)
@@ -62,8 +60,6 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
         <Label>Budget Type</Label>
         <div className="grid grid-cols-2 gap-2">
           {([
-            ["overall", "Overall"],
-            ["category", "By Category"],
             ["wallet", "By Wallet"],
             ["category_wallet", "Category + Wallet"],
           ] as const).map(([value, label]) => (
@@ -80,7 +76,27 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
         </div>
       </div>
 
-      {(budgetType === "category" || budgetType === "category_wallet") && (
+      <div className="space-y-2">
+        <Label>Wallet</Label>
+        <Select value={walletId} onValueChange={setWalletId} required>
+          <SelectTrigger>
+            <SelectValue placeholder="Select wallet" />
+          </SelectTrigger>
+          <SelectContent>
+            {wallets.map((w) => (
+              <SelectItem key={w.id} value={w.id}>
+                <span className="flex items-center gap-2">
+                  <span>{w.icon}</span>
+                  <span>{w.name}</span>
+                  <span className="text-muted-foreground">({w.currency})</span>
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {budgetType === "category_wallet" && (
         <div className="space-y-2">
           <Label>Category</Label>
           <Select value={categoryId} onValueChange={setCategoryId} required>
@@ -93,28 +109,6 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
                   <span className="flex items-center gap-2">
                     <span>{cat.icon}</span>
                     <span>{cat.name}</span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
-      {(budgetType === "wallet" || budgetType === "category_wallet") && (
-        <div className="space-y-2">
-          <Label>Wallet</Label>
-          <Select value={walletId} onValueChange={setWalletId} required>
-            <SelectTrigger>
-              <SelectValue placeholder="Select wallet" />
-            </SelectTrigger>
-            <SelectContent>
-              {wallets.map((w) => (
-                <SelectItem key={w.id} value={w.id}>
-                  <span className="flex items-center gap-2">
-                    <span>{w.icon}</span>
-                    <span>{w.name}</span>
-                    <span className="text-muted-foreground">({w.currency})</span>
                   </span>
                 </SelectItem>
               ))}
