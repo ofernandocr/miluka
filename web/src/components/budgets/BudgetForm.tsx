@@ -13,6 +13,7 @@ import type { Budget, NewBudget, Category, Wallet } from "@/lib/types"
 import { getCurrencySymbol } from "@/lib/utils"
 
 type BudgetType = "wallet" | "category_wallet"
+type PeriodType = "monthly" | "custom"
 
 interface BudgetFormProps {
   categories: Category[]
@@ -31,9 +32,14 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
   const [budgetType, setBudgetType] = useState<BudgetType>(
     initialData ? getBudgetType(initialData) : "wallet"
   )
+  const [periodType, setPeriodType] = useState<PeriodType>(
+    initialData?.start_date && initialData?.end_date ? "custom" : "monthly"
+  )
   const [amount, setAmount] = useState(initialData ? String(initialData.amount) : "")
   const [categoryId, setCategoryId] = useState(initialData?.category_id ?? "")
   const [walletId, setWalletId] = useState(initialData?.wallet_id ?? "")
+  const [startDate, setStartDate] = useState(initialData?.start_date ?? "")
+  const [endDate, setEndDate] = useState(initialData?.end_date ?? "")
   const [submitting, setSubmitting] = useState(false)
 
   const expenseCategories = categories.filter((c) => c.type === "expense")
@@ -48,6 +54,8 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
         amount: Number(amount),
         category_id: budgetType === "category_wallet" ? categoryId || null : null,
         wallet_id: walletId || null,
+        start_date: periodType === "custom" ? startDate || null : null,
+        end_date: periodType === "custom" ? endDate || null : null,
       })
     } finally {
       setSubmitting(false)
@@ -114,6 +122,51 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
               ))}
             </SelectContent>
           </Select>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <Label>Period</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            type="button"
+            variant={periodType === "monthly" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPeriodType("monthly")}
+          >
+            Monthly
+          </Button>
+          <Button
+            type="button"
+            variant={periodType === "custom" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPeriodType("custom")}
+          >
+            Custom Period
+          </Button>
+        </div>
+      </div>
+
+      {periodType === "custom" && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Start Date</Label>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>End Date</Label>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              required
+            />
+          </div>
         </div>
       )}
 

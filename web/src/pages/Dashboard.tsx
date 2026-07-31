@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
 import { useWallets } from "@/hooks/useWallets"
+import { useBudgets } from "@/hooks/useBudgets"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { TransactionForm } from "@/components/transactions/TransactionForm"
+import { computeBudgetSpent } from "@/components/budgets/BudgetList"
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
 import {
   BarChart,
@@ -26,7 +28,7 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts"
-import type { Transaction, Wallet, NewTransaction } from "@/lib/types"
+import type { Transaction, Wallet, NewTransaction, Budget } from "@/lib/types"
 
 type TimeRange = "month" | "all"
 
@@ -106,11 +108,55 @@ function computeWalletSummaries(
   return result
 }
 
+function getProgressColor(pct: number): string {
+  if (pct > 100) return "bg-red-500"
+  if (pct > 85) return "bg-orange-500"
+  if (pct > 60) return "bg-yellow-500"
+  return "bg-green-500"
+}
+
+function getProgressTextColor(pct: number): string {
+  if (pct > 100) return "text-red-500"
+  if (pct > 85) return "text-orange-500"
+  if (pct > 60) return "text-yellow-500"
+  return "text-green-500"
+}
+
+function BudgetOverviewItem({ budget, spent, currency }: { budget: Budget; spent: number; currency: string }) {
+  const pct = budget.amount > 0 ? (spent / budget.amount) * 100 : 0
+  const icon = budget.category?.icon ?? budget.wallet?.icon ?? "📊"
+  const name = budget.category?.name ?? budget.wallet?.name ?? "Budget"
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="truncate font-medium">
+          {icon} {name}
+        </span>
+        <span className={getProgressTextColor(pct)}>
+          {pct.toFixed(0)}%
+        </span>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+        <div
+          className={`h-full rounded-full transition-all ${getProgressColor(pct)}`}
+          style={{ width: `${Math.min(pct, 100)}%` }}
+        />
+      </div>
+      <div className="flex justify-between text-[10px] text-muted-foreground">
+        <span>{formatCurrency(spent, currency)}</span>
+        <span>{formatCurrency(budget.amount, currency)}</span>
+      </div>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { user } = useAuth()
   const { transactions, loading, createTransaction } = useTransactions(user?.id)
   const { categories } = useCategories(user?.id)
   const { wallets } = useWallets(user?.id)
+  const { budgets } = useBudgets(user?.id)
   const navigate = useNavigate()
 
   const [selectedWalletId, setSelectedWalletId] = useState<string>("all")
@@ -131,6 +177,18 @@ export default function Dashboard() {
     if (selectedWalletId === "all") return walletSummaries
     return walletSummaries.filter((s) => s.wallet.id === selectedWalletId)
   }, [walletSummaries, selectedWalletId])
+
+  const walletBudgets = useMemo(() => {
+    const map = new Map<string, { budget: Budget; spent: number }[]>()
+    for (const b of budgets) {
+      if (!b.wallet_id) continue
+      const spent = computeBudgetSpent(b, transactions)
+      const list = map.get(b.wallet_id) ?? []
+      list.push({ budget: b, spent })
+      map.set(b.wallet_id, list)
+    }
+    return map
+  }, [budgets, transactions])
 
   const handleCategoryClick = (categoryId: string) => {
     navigate(`/transactions?category=${categoryId}`)
@@ -201,6 +259,7 @@ export default function Dashboard() {
       {visibleSummaries.map((summary) => {
         const totalExpense = summary.categoryData.reduce((s, c) => s + c.value, 0)
         const balance = summary.income - summary.expense
+        const budgetsForWallet = walletBudgets.get(summary.wallet.id) ?? []
 
         return (
           <div key={summary.wallet.id} className="space-y-4">
@@ -251,6 +310,24 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
+
+            {budgetsForWallet.length > 0 && (
+              <Card className="cursor-pointer" onClick={() => navigate("/budgets")}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Budgets</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {budgetsForWallet.map(({ budget, spent }) => (
+                    <BudgetOverviewItem
+                      key={budget.id}
+                      budget={budget}
+                      spent={spent}
+                      currency={summary.wallet.currency}
+                    />
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             {summary.categoryData.length > 0 && (
               <Card>

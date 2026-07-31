@@ -54,9 +54,11 @@ export interface Budget {
   amount: number
   category_id: string | null
   wallet_id: string | null
+  start_date: string | null
+  end_date: string | null
   created_at: string
   category?: Category
   wallet?: Wallet
 }
 
-export type NewBudget = Pick<Budget, "amount" | "category_id" | "wallet_id">
+export type NewBudget = Pick<Budget, "amount" | "category_id" | "wallet_id" | "start_date" | "end_date">

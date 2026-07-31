@@ -9,17 +9,7 @@ import { Button } from "@/components/ui/button"
 import { BudgetForm } from "@/components/budgets/BudgetForm"
 import { BudgetList, computeBudgetSpent } from "@/components/budgets/BudgetList"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import type { NewBudget, Transaction } from "@/lib/types"
-
-function filterCurrentMonthExpenses(transactions: Transaction[]): Transaction[] {
-  const now = new Date()
-  const month = now.getMonth()
-  const year = now.getFullYear()
-  return transactions.filter((t) => {
-    const d = new Date(t.date)
-    return d.getMonth() === month && d.getFullYear() === year && t.type === "expense"
-  })
-}
+import type { NewBudget } from "@/lib/types"
 
 export default function Budgets() {
   const { user } = useAuth()
@@ -31,17 +21,12 @@ export default function Budgets() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingBudget, setEditingBudget] = useState<string | null>(null)
 
-  const currentMonthExpenses = useMemo(
-    () => filterCurrentMonthExpenses(transactions),
-    [transactions]
-  )
-
   const budgetsWithSpent = useMemo(() => {
     return budgets.map((b) => ({
       ...b,
-      spent: computeBudgetSpent(b, currentMonthExpenses),
+      spent: computeBudgetSpent(b, transactions),
     }))
-  }, [budgets, currentMonthExpenses])
+  }, [budgets, transactions])
 
   const handleCreate = async (data: NewBudget) => {
     await createBudget(data)
@@ -81,10 +66,6 @@ export default function Budgets() {
           Add Budget
         </Button>
       </div>
-
-      <p className="text-sm text-muted-foreground">
-        Set monthly spending limits. Current period: {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-      </p>
 
       <BudgetList
         budgets={budgetsWithSpent}

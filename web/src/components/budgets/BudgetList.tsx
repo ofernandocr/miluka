@@ -2,7 +2,7 @@ import { Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Budget, Transaction } from "@/lib/types"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, formatDate } from "@/lib/utils"
 
 interface BudgetWithSpent extends Budget {
   spent: number
@@ -28,6 +28,14 @@ function getProgressTextColor(pct: number): string {
   return "text-green-500"
 }
 
+function getPeriodLabel(budget: Budget): string {
+  if (budget.start_date && budget.end_date) {
+    return `${formatDate(budget.start_date)} — ${formatDate(budget.end_date)}`
+  }
+  const now = new Date()
+  return now.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+}
+
 function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & Pick<BudgetListProps, "onEdit" | "onDelete">) {
   const pct = budget.amount > 0 ? (budget.spent / budget.amount) * 100 : 0
   const remaining = budget.amount - budget.spent
@@ -35,7 +43,7 @@ function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & 
 
   const icon = budget.category?.icon ?? budget.wallet?.icon ?? "📊"
   const name = budget.category
-    ? `${budget.category.icon} ${budget.category.name} — ${budget.wallet?.icon ?? ""} ${budget.wallet?.name ?? ""}`
+    ? `${budget.category.icon} ${budget.category.name}`
     : `${budget.wallet?.icon ?? "💼"} ${budget.wallet?.name ?? "Wallet"}`
 
   return (
@@ -57,6 +65,8 @@ function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & 
             </Button>
           </div>
         </div>
+
+        <p className="text-xs text-muted-foreground">{getPeriodLabel(budget)}</p>
 
         <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-secondary">
           <div
@@ -120,10 +130,23 @@ export function BudgetList({ budgets, onEdit, onDelete }: BudgetListProps) {
   )
 }
 
+export function getBudgetDateRange(budget: Budget): { start: Date; end: Date } {
+  if (budget.start_date && budget.end_date) {
+    return { start: new Date(budget.start_date), end: new Date(budget.end_date) }
+  }
+  const now = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth(), 1)
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  return { start, end }
+}
+
 export function computeBudgetSpent(budget: Budget, transactions: Transaction[]): number {
+  const { start, end } = getBudgetDateRange(budget)
   return transactions
     .filter((t) => {
       if (t.type !== "expense") return false
+      const txDate = new Date(t.date)
+      if (txDate < start || txDate > end) return false
       if (budget.category_id && t.category_id !== budget.category_id) return false
       if (budget.wallet_id && t.wallet_id !== budget.wallet_id) return false
       return true
