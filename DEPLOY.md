@@ -53,38 +53,20 @@
 ### 1.4 Apply Database Schema
 
 1. Go to **SQL Editor** (left sidebar)
-2. Run each migration file in order:
+2. Run the combined migration script:
 
-**Step 1: Create tables**
 ```sql
--- Paste contents of sql/001_schema.sql
--- This creates: profiles, wallets, categories, transactions tables
--- And the handle_new_user() trigger
+-- Paste contents of sql/000_supabase_cloud_init.sql
+-- This single script creates ALL tables, RLS policies, triggers, and seeds
+-- Fully idempotent: safe to re-run on existing databases
 ```
 
-**Step 2: Enable RLS**
-```sql
--- Paste contents of sql/002_rls.sql
--- This enables Row Level Security on all tables
-```
-
-**Step 3: Seed categories**
-```sql
--- Paste contents of sql/003_seed.sql
--- This creates default expense and income categories
-```
-
-**Step 4: Wallets migration**
-```sql
--- Paste contents of sql/004_wallets.sql
--- This creates wallets table with RLS
-```
-
-**Step 5: Transaction wallet FK**
-```sql
--- Paste contents of sql/005_transactions_wallet.sql
--- This adds wallet_id to transactions
-```
+The script creates:
+- profiles, wallets, categories, transactions, budgets tables
+- Row Level Security on all tables
+- Auto-create profile + wallet trigger on signup
+- 18 default categories (13 expense + 5 income)
+- Budgets with period support (monthly/custom)
 
 ### 1.5 Configure Authentication
 
@@ -158,7 +140,8 @@ In Cloudflare Pages project settings → **Settings → Variables and secrets**:
 2. You should see:
    - A row in `profiles` for your user
    - A default wallet ("General", MXN) in `wallets`
-   - 17 default categories in `categories`
+   - 18 default categories in `categories`
+   - `budgets` table ready for budget creation
 
 ### 3.3 Test PWA (Mobile)
 
@@ -219,7 +202,7 @@ After adding custom domain, update Supabase:
 
 ### Database tables missing
 
-- Re-run the SQL migrations in order (001 → 005)
+- Re-run `sql/000_supabase_cloud_init.sql` — it's fully idempotent and safe to re-run
 - Check Supabase Dashboard → Table Editor for existing tables
 
 ---
@@ -235,7 +218,8 @@ After adding custom domain, update Supabase:
 
 1. Create new SQL file in `sql/` directory (e.g., `006_new_feature.sql`)
 2. Run in Supabase SQL Editor
-3. Document in ARCHITECTURE.md
+3. **Update `sql/000_supabase_cloud_init.sql`** to include the new schema — this file must always reflect the current state of the database
+4. Document in ARCHITECTURE.md
 
 ---
 

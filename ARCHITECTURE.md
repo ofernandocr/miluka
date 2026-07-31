@@ -11,11 +11,17 @@ miluka/
 ├── ARCHITECTURE.md           # This file — architecture reference
 │
 ├── sql/                      # Database migrations (applied via psql)
+│   ├── 000_supabase_cloud_init.sql  # Combined migration for Supabase Cloud (idempotent)
 │   ├── 001_schema.sql        # Core tables: profiles, categories, transactions, wallets
 │   ├── 002_rls.sql           # Row-level security policies
 │   ├── 003_seed.sql          # Default categories for new users
 │   ├── 004_wallets.sql       # Add wallets table + RLS + backfill
-│   └── 005_transactions_wallet.sql  # Add wallet_id to transactions
+│   ├── 005_transactions_wallet.sql  # Add wallet_id to transactions
+│   ├── 006_search.sql        # Add search index on transactions
+│   ├── 007_shared_categories.sql    # Shared categories model (user_id=NULL defaults)
+│   ├── 008_seed_transactions.sql    # Idempotent seed script for test data
+│   ├── 009_budgets.sql       # Budgets table + RLS + unique constraint
+│   └── 010_budget_periods.sql # Add start_date, end_date to budgets
 │
 ├── supabase/                 # Supabase service configs
 │   ├── kong.yml              # API gateway routes
@@ -40,16 +46,18 @@ miluka/
         │   └── utils.ts      # cn(), formatCurrency(), CURRENCIES
         ├── hooks/
         │   ├── useAuth.ts    # Auth state (user, signIn, signUp, signOut)
+        │   ├── useBudgets.ts # Budget CRUD (+ category, wallet join)
         │   ├── useCategories.ts  # Category CRUD
         │   ├── useTransactions.ts # Transaction CRUD (+ category, wallet join)
         │   └── useWallets.ts  # Wallet CRUD
         ├── components/
         │   ├── layout/       # Navbar, ProtectedRoute
         │   ├── ui/           # shadcn/ui primitives (button, card, dialog, etc.)
+        │   ├── budgets/      # BudgetForm, BudgetList
         │   ├── categories/   # CategoryList, CategoryForm
         │   ├── transactions/ # TransactionList, TransactionForm, TransactionItem
         │   └── wallets/      # WalletList, WalletForm
-        └── pages/            # Route pages (Login, Register, Dashboard, Transactions, Categories, Wallets)
+        └── pages/            # Route pages (Login, Register, Dashboard, Transactions, Categories, Wallets, Budgets)
 ```
 
 ## Data Model
@@ -62,11 +70,13 @@ miluka/
 | `wallets`     | N:1 profiles, 1:N transactions             | Yes | Each wallet has its own currency |
 | `categories`  | N:1 profiles (nullable), 1:N transactions  | Yes | Shared defaults (user_id=NULL) + user-specific |
 | `transactions`| N:1 profiles, N:1 wallets, N:1 categories  | Yes | wallet_id nullable (backfilled to default) |
+| `budgets`     | N:1 profiles, N:1 wallets, N:1 categories  | Yes | Period: monthly (NULL dates) or custom (start/end) |
 
 ### Key Constraints
 - `wallets(user_id, name)` — unique wallet names per user
 - `transactions.amount > 0` — positive amounts only
 - `transactions.type IN ('expense', 'income')`
+- `budgets(user_id, COALESCE(category_id,''), COALESCE(wallet_id,''))` — one budget per user/category/wallet combination
 - `profiles.currency` is kept for backwards compatibility; wallets table is the source of truth for transaction currency
 
 ### Default Wallet
@@ -78,7 +88,7 @@ miluka/
 - **Custom categories** have `user_id = <uuid>` — private to the user who created them
 - Users see all defaults + their own custom categories
 - RLS ensures users can only INSERT/UPDATE/DELETE their own categories
-- 17 default categories: 12 expense + 5 income (defined in `sql/007_shared_categories.sql`)
+- 18 default categories: 13 expense + 5 income (defined in `sql/000_supabase_cloud_init.sql`)
 - No category seeding on signup — defaults are global, not per-user
 
 ## Auth Flow
@@ -118,16 +128,21 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 
 ## Dashboard Filtering
 
-The Dashboard uses per-wallet data isolation. When "All wallets" is selected, each wallet gets its own section with summary cards and pie chart:
+The Dashboard uses per-wallet data isolation. When "All wallets" is selected, each wallet gets its own section with summary cards and a unified spending list:
 
 1. `filterByTimeRange(tx, timeRange)` — filters transactions by current month
 2. `computeWalletSummaries(tx, wallets)` — returns `[{ wallet, income, expense, categoryData }]` per wallet
 3. `computeCategoryData(tx)` — returns `[{ id, name, icon, value, color }]` for a single wallet's expenses
+4. `buildUnifiedCategories(categoryData, budgets, totalExpense)` — merges budget data with spending data into a single list
 
 Each wallet section displays:
 - Wallet header (icon, name, currency)
 - Summary cards (Income, Expenses, Balance)
-- Pie chart with clickable legend → navigates to `/transactions?category=<id>`
+- Unified spending list:
+  - Categories with budget: budget progress bar (spent/budget) with color coding (green/yellow/orange/red)
+  - Categories without budget: percentage of total spending bar using category color
+  - Sorted highest to lowest by amount
+  - "Manage budgets →" link at bottom (only when budgets exist)
 
 When a specific wallet is selected via dropdown, only that wallet's section is shown.
 

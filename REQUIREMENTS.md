@@ -63,8 +63,8 @@ Add `wallet_id` to the existing `transactions` table:
 - Default categories cannot be edited or deleted by users
 - Custom categories can be fully managed (CRUD) by their owner
 
-### 3.2 Default Categories (17 total)
-**Expense (12):** Food, Transport, Housing, Utilities, Health, Entertainment, Education, Shopping, Travel, Pets, Gifts, Other
+### 3.2 Default Categories (18 total)
+**Expense (13):** Food & Drink, Transport, Housing, Utilities, Health, Entertainment, Education, Groceries, Shopping, Travel, Pets, Gifts, Other
 
 **Income (5):** Salary, Freelance, Investments, Gifts, Other
 
@@ -94,18 +94,51 @@ Add `wallet_id` to the existing `transactions` table:
 
 Each amount displayed with its currency symbol. If multiple wallets visible, amounts grouped by currency.
 
-### 4.4 Spending by Category (PieChart)
-Shows expense breakdown by category for the selected wallet(s) and time range.
+### 4.4 Spending by Category (Unified List)
+Shows expense breakdown by category for the selected wallet(s) and time range. Merges budget data with spending data:
+
+- Categories with budget: budget progress bar (spent/budget) with color coding
+- Categories without budget: percentage of total spending bar
+- Sorted highest to lowest by amount
+- "Manage budgets →" link at bottom (only when budgets exist)
 
 ---
 
-## 5. Bank Notification Detection (future phase)
+## 5. Budgets
 
-### 5.1 Platforms
+### 5.1 Budget Types
+Two budget types, both requiring a wallet:
+- **By Wallet:** Budget for the entire wallet (no category filter)
+- **Category + Wallet:** Budget for a specific category within a wallet
+
+### 5.2 Budget Periods
+- **Monthly (default):** Repeats every month, uses current month for date range
+- **Custom:** User defines start_date and end_date for one-time or irregular periods
+
+### 5.3 Budget Table
+| Column      | Type         | Notes                              |
+|------------|--------------|------------------------------------|
+| id         | uuid         | PK, default gen_random_uuid()      |
+| user_id    | uuid         | FK → profiles(id), NOT NULL        |
+| amount     | decimal(12,2)| NOT NULL, check (amount > 0)       |
+| category_id| uuid         | FK → categories(id), nullable      |
+| wallet_id  | uuid         | FK → wallets(id), nullable         |
+| start_date | date         | NULL for monthly, set for custom   |
+| end_date   | date         | NULL for monthly, set for custom   |
+| created_at | timestamptz  | default now()                      |
+
+- Unique constraint: one budget per user/category/wallet combination
+- Budget shown in Dashboard as part of unified spending list
+
+---
+
+## 6. Bank Notification Detection (future phase)
+
+### 6.1 Platforms
 - Android: NotificationListenerService
 - iOS: Notification Service Extension (limited)
 
-### 5.2 Behavior
+### 6.2 Behavior
 - Detect incoming notifications from known banking apps
 - Parse amount, merchant, and date
 - Create a draft transaction for user confirmation
@@ -113,33 +146,34 @@ Shows expense breakdown by category for the selected wallet(s) and time range.
 
 ---
 
-## 6. Code Conventions
+## 7. Code Conventions
 
 - All code, comments, commits, and docs in English
 - Feature-by-feature commits: each feature is fully implemented and testable before moving to the next
 - Each commit includes: schema migration (if needed) + frontend changes + tests
 - Run `npm run lint` and `npm test` before every commit
+- **Every project modification must include updating `sql/000_supabase_cloud_init.sql`** if the schema changes — this file is the source of truth for Supabase Cloud deployments
 
 ---
 
-## 7. Deployment
+## 8. Deployment
 
-### 7.1 Production Stack
+### 8.1 Production Stack
 - **Frontend:** Cloudflare Pages (static hosting, unlimited bandwidth, free SSL)
 - **Backend:** Supabase Cloud (managed auth, REST API, PostgreSQL)
 - **Mobile:** PWA (Progressive Web App — installable from browser)
 
-### 7.2 Free Tier Limits
+### 8.2 Free Tier Limits
 | Service | Limit |
 |---------|-------|
 | Supabase Cloud | 500MB DB, 50K MAU, 5GB bandwidth |
 | Cloudflare Pages | Unlimited bandwidth, 500 builds/month |
 
-### 7.3 Environment Variables
+### 8.3 Environment Variables
 - `VITE_SUPABASE_URL` — Supabase project URL (e.g., `https://xyz.supabase.co`)
 - `VITE_SUPABASE_ANON_KEY` — Supabase anonymous key (public, safe for client)
 
-### 7.4 PWA Requirements
+### 8.4 PWA Requirements
 - Icons: `web/public/icons/icon-192.png` and `icon-512.png`
 - Manifest configured in `vite.config.ts`
 - Auto-updating service worker via `vite-plugin-pwa`

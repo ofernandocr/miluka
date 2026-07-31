@@ -1,6 +1,7 @@
 -- ============================================================
 -- miLuka — Combined Migration for Supabase Cloud
 -- Run this SINGLE script in the Supabase SQL Editor
+-- Fully idempotent: safe to re-run on existing databases
 -- ============================================================
 
 -- 1. Create tables
@@ -108,98 +109,155 @@ alter table public.budgets enable row level security;
 -- 3. RLS Policies — Profiles
 -- ============================================================
 
-create policy "Users can read own profile"
-  on public.profiles for select
-  using (auth.uid() = id);
+DO $$ BEGIN
+  CREATE POLICY "Users can read own profile"
+    ON public.profiles FOR SELECT
+    USING (auth.uid() = id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can update own profile"
-  on public.profiles for update
-  using (auth.uid() = id);
+DO $$ BEGIN
+  CREATE POLICY "Users can update own profile"
+    ON public.profiles FOR UPDATE
+    USING (auth.uid() = id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can insert own profile"
-  on public.profiles for insert
-  with check (auth.uid() = id);
+DO $$ BEGIN
+  CREATE POLICY "Users can insert own profile"
+    ON public.profiles FOR INSERT
+    WITH CHECK (auth.uid() = id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- 4. RLS Policies — Wallets
 -- ============================================================
 
-create policy "Users can read own wallets"
-  on public.wallets for select
-  using (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can read own wallets"
+    ON public.wallets FOR SELECT
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can create own wallets"
-  on public.wallets for insert
-  with check (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can create own wallets"
+    ON public.wallets FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can update own wallets"
-  on public.wallets for update
-  using (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can update own wallets"
+    ON public.wallets FOR UPDATE
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can delete own wallets"
-  on public.wallets for delete
-  using (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can delete own wallets"
+    ON public.wallets FOR DELETE
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- 5. RLS Policies — Categories (shared defaults + user-specific)
 -- ============================================================
 
-create policy "Users can read categories"
-  on public.categories for select
-  using (user_id IS NULL OR auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can read categories"
+    ON public.categories FOR SELECT
+    USING (user_id IS NULL OR auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can create own categories"
-  on public.categories for insert
-  with check (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can create own categories"
+    ON public.categories FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can update own categories"
-  on public.categories for update
-  using (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can update own categories"
+    ON public.categories FOR UPDATE
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can delete own categories"
-  on public.categories for delete
-  using (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can delete own categories"
+    ON public.categories FOR DELETE
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- 6. RLS Policies — Transactions
 -- ============================================================
 
-create policy "Users can read own transactions"
-  on public.transactions for select
-  using (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can read own transactions"
+    ON public.transactions FOR SELECT
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can create own transactions"
-  on public.transactions for insert
-  with check (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can create own transactions"
+    ON public.transactions FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can update own transactions"
-  on public.transactions for update
-  using (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can update own transactions"
+    ON public.transactions FOR UPDATE
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can delete own transactions"
-  on public.transactions for delete
-  using (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can delete own transactions"
+    ON public.transactions FOR DELETE
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- 7. RLS Policies — Budgets
 -- ============================================================
 
-create policy "Users can read own budgets"
-  on public.budgets for select
-  using (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can read own budgets"
+    ON public.budgets FOR SELECT
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can create own budgets"
-  on public.budgets for insert
-  with check (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can create own budgets"
+    ON public.budgets FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can update own budgets"
-  on public.budgets for update
-  using (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can update own budgets"
+    ON public.budgets FOR UPDATE
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-create policy "Users can delete own budgets"
-  on public.budgets for delete
-  using (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "Users can delete own budgets"
+    ON public.budgets FOR DELETE
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- 8. Seed default categories (shared for all users)
 -- ============================================================
 
--- Expense categories
+-- Expense categories (13)
 insert into public.categories (user_id, name, icon, color, type) values
   (NULL, 'Food & Drink', '🍔', '#ef4444', 'expense'),
   (NULL, 'Transport', '🚗', '#f97316', 'expense'),
@@ -216,7 +274,7 @@ insert into public.categories (user_id, name, icon, color, type) values
   (NULL, 'Other', '📦', '#6b7280', 'expense')
 on conflict (user_id, name, type) do nothing;
 
--- Income categories
+-- Income categories (5)
 insert into public.categories (user_id, name, icon, color, type) values
   (NULL, 'Salary', '💰', '#22c55e', 'income'),
   (NULL, 'Freelance', '💻', '#3b82f6', 'income'),
@@ -224,3 +282,6 @@ insert into public.categories (user_id, name, icon, color, type) values
   (NULL, 'Gifts', '🎁', '#ec4899', 'income'),
   (NULL, 'Other', '📦', '#6b7280', 'income')
 on conflict (user_id, name, type) do nothing;
+
+-- Reload PostgREST schema cache
+NOTIFY pgrst, 'reload schema';
