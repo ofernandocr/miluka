@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
-import { Plus, Filter, X } from "lucide-react"
+import { Plus, Filter, X, Search } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
 import { useWallets } from "@/hooks/useWallets"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { TransactionList } from "@/components/transactions/TransactionList"
 import { TransactionForm } from "@/components/transactions/TransactionForm"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -31,16 +32,30 @@ export default function Transactions() {
 
   const categoryFilter = searchParams.get("category") ?? ""
   const typeFilter = searchParams.get("type") ?? ""
+  const queryFilter = searchParams.get("q") ?? ""
 
   const filteredTransactions = useMemo(() => {
+    const q = queryFilter.toLowerCase()
     return transactions.filter((t) => {
       if (categoryFilter && t.category_id !== categoryFilter) return false
       if (typeFilter && t.type !== typeFilter) return false
+      if (q) {
+        const desc = t.description?.toLowerCase() ?? ""
+        const amount = String(t.amount)
+        if (!desc.includes(q) && !amount.includes(q)) return false
+      }
       return true
     })
-  }, [transactions, categoryFilter, typeFilter])
+  }, [transactions, categoryFilter, typeFilter, queryFilter])
 
   const activeFilterCategory = categories.find((c) => c.id === categoryFilter)
+
+  const setQueryFilter = (value: string) => {
+    const params = new URLSearchParams(searchParams)
+    if (value) params.set("q", value)
+    else params.delete("q")
+    setSearchParams(params)
+  }
 
   const setCategoryFilter = (value: string) => {
     const params = new URLSearchParams(searchParams)
@@ -60,7 +75,7 @@ export default function Transactions() {
     setSearchParams({})
   }
 
-  const hasFilters = categoryFilter || typeFilter
+  const hasFilters = categoryFilter || typeFilter || queryFilter
 
   const handleCreate = async (data: NewTransaction) => {
     await createTransaction(data)
@@ -105,6 +120,16 @@ export default function Transactions() {
 
       <div className="flex flex-wrap items-center gap-2">
         <Filter className="h-4 w-4 text-muted-foreground" />
+
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search..."
+            value={queryFilter}
+            onChange={(e) => setQueryFilter(e.target.value)}
+            className="h-9 w-44 pl-8 text-sm"
+          />
+        </div>
 
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-32">
