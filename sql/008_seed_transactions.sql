@@ -9,7 +9,7 @@ DECLARE
   v_user_id UUID := 'e4c0ebb4-3477-4482-9e9a-b39bc7e56be9';
   v_cop_wallet UUID := 'f305cdf4-9f6f-467d-ad10-e826851782fb';
   v_mxn_wallet UUID := '4269ccd1-f0f8-4055-86da-4b1e88f53232';
-  v_cat_food UUID;
+  v_cat_food UUID; -- Food & Drink
   v_cat_transport UUID;
   v_cat_entertainment UUID;
   v_cat_shopping UUID;
@@ -26,7 +26,7 @@ BEGIN
   END IF;
 
   -- Get category IDs
-  SELECT id INTO v_cat_food FROM categories WHERE name = 'Food' AND type = 'expense' AND user_id IS NULL LIMIT 1;
+  SELECT id INTO v_cat_food FROM categories WHERE name = 'Food & Drink' AND type = 'expense' AND user_id IS NULL LIMIT 1;
   SELECT id INTO v_cat_transport FROM categories WHERE name = 'Transport' AND type = 'expense' AND user_id IS NULL LIMIT 1;
   SELECT id INTO v_cat_entertainment FROM categories WHERE name = 'Entertainment' AND type = 'expense' AND user_id IS NULL LIMIT 1;
   SELECT id INTO v_cat_shopping FROM categories WHERE name = 'Shopping' AND type = 'expense' AND user_id IS NULL LIMIT 1;

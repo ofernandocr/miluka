@@ -60,6 +60,21 @@ create table if not exists public.transactions (
 create index if not exists idx_transactions_user on public.transactions(user_id);
 create index if not exists idx_transactions_date on public.transactions(user_id, date desc);
 
+-- Budgets table
+create table if not exists public.budgets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  amount decimal(12,2) not null check (amount > 0),
+  category_id uuid references public.categories(id) on delete set null,
+  wallet_id uuid references public.wallets(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists budgets_user_cat_wallet_key
+  on public.budgets (user_id, coalesce(category_id::text, ''), coalesce(wallet_id::text, ''));
+
+create index if not exists idx_budgets_user on public.budgets(user_id);
+
 -- Auto-create profile and default wallet on signup
 create or replace function public.handle_new_user()
 returns trigger
@@ -86,6 +101,7 @@ alter table public.profiles enable row level security;
 alter table public.wallets enable row level security;
 alter table public.categories enable row level security;
 alter table public.transactions enable row level security;
+alter table public.budgets enable row level security;
 
 -- 3. RLS Policies — Profiles
 -- ============================================================
@@ -159,19 +175,39 @@ create policy "Users can delete own transactions"
   on public.transactions for delete
   using (auth.uid() = user_id);
 
--- 7. Seed default categories (shared for all users)
+-- 7. RLS Policies — Budgets
+-- ============================================================
+
+create policy "Users can read own budgets"
+  on public.budgets for select
+  using (auth.uid() = user_id);
+
+create policy "Users can create own budgets"
+  on public.budgets for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own budgets"
+  on public.budgets for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete own budgets"
+  on public.budgets for delete
+  using (auth.uid() = user_id);
+
+-- 8. Seed default categories (shared for all users)
 -- ============================================================
 
 -- Expense categories
 insert into public.categories (user_id, name, icon, color, type) values
-  (NULL, 'Food', '🍔', '#ef4444', 'expense'),
+  (NULL, 'Food & Drink', '🍔', '#ef4444', 'expense'),
   (NULL, 'Transport', '🚗', '#f97316', 'expense'),
   (NULL, 'Housing', '🏠', '#eab308', 'expense'),
   (NULL, 'Utilities', '💡', '#06b6d4', 'expense'),
   (NULL, 'Health', '🏥', '#22c55e', 'expense'),
   (NULL, 'Entertainment', '🎬', '#8b5cf6', 'expense'),
   (NULL, 'Education', '📚', '#3b82f6', 'expense'),
-  (NULL, 'Shopping', '🛒', '#ec4899', 'expense'),
+  (NULL, 'Groceries', '🛒', '#ec4899', 'expense'),
+  (NULL, 'Shopping', '🛍️', '#ec4899', 'expense'),
   (NULL, 'Travel', '✈️', '#14b8a6', 'expense'),
   (NULL, 'Pets', '🐾', '#f97316', 'expense'),
   (NULL, 'Gifts', '🎁', '#ef4444', 'expense'),
