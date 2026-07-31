@@ -1,7 +1,9 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
+import { Plus } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
+import { useCategories } from "@/hooks/useCategories"
 import { useWallets } from "@/hooks/useWallets"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,15 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { TransactionForm } from "@/components/transactions/TransactionForm"
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
 import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
   Tooltip,
+  ResponsiveContainer,
 } from "recharts"
-import type { Transaction, Wallet } from "@/lib/types"
+import type { Transaction, Wallet, NewTransaction } from "@/lib/types"
 
 type TimeRange = "month" | "all"
 
@@ -102,12 +107,14 @@ function computeWalletSummaries(
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const { transactions, loading } = useTransactions(user?.id)
+  const { transactions, loading, createTransaction } = useTransactions(user?.id)
+  const { categories } = useCategories(user?.id)
   const { wallets } = useWallets(user?.id)
   const navigate = useNavigate()
 
   const [selectedWalletId, setSelectedWalletId] = useState<string>("all")
   const [timeRange, setTimeRange] = useState<TimeRange>("month")
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   const timeFiltered = useMemo(
     () => filterByTimeRange(transactions, timeRange),
@@ -126,6 +133,11 @@ export default function Dashboard() {
 
   const handleCategoryClick = (categoryId: string) => {
     navigate(`/transactions?category=${categoryId}`)
+  }
+
+  const handleCreate = async (data: NewTransaction) => {
+    await createTransaction(data)
+    setDialogOpen(false)
   }
 
   if (loading) {
@@ -245,27 +257,32 @@ export default function Dashboard() {
                   <CardTitle className="text-base">Spending by Category</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-                    <div className="flex-shrink-0">
-                      <ResponsiveContainer width={200} height={200}>
-                        <PieChart>
-                          <Pie
-                            data={summary.categoryData}
-                            dataKey="value"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={90}
-                            innerRadius={45}
-                          >
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+                    <div className="flex-shrink-0" style={{ width: 280, height: Math.max(200, summary.categoryData.length * 36) }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={summary.categoryData}
+                          layout="vertical"
+                          margin={{ top: 0, right: 8, left: 0, bottom: 0 }}
+                        >
+                          <XAxis type="number" hide />
+                          <YAxis
+                            type="category"
+                            dataKey="name"
+                            width={100}
+                            tick={{ fontSize: 12 }}
+                          />
+                          <Tooltip
+                            formatter={(value: number) =>
+                              formatCurrency(value, summary.wallet.currency)
+                            }
+                          />
+                          <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                             {summary.categoryData.map((entry, i) => (
-                              <Cell key={i} fill={entry.color} />
+                              <rect key={i} fill={entry.color} />
                             ))}
-                          </Pie>
-                          <Tooltip formatter={(value: number) =>
-                            formatCurrency(value, summary.wallet.currency)
-                          } />
-                        </PieChart>
+                          </Bar>
+                        </BarChart>
                       </ResponsiveContainer>
                     </div>
 
@@ -310,6 +327,27 @@ export default function Dashboard() {
           </div>
         )
       })}
+
+      <button
+        onClick={() => setDialogOpen(true)}
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 active:scale-95"
+      >
+        <Plus className="h-6 w-6" />
+      </button>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Transaction</DialogTitle>
+          </DialogHeader>
+          <TransactionForm
+            categories={categories}
+            wallets={wallets}
+            onSubmit={handleCreate}
+            onCancel={() => setDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
