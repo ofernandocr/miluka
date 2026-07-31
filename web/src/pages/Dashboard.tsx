@@ -23,6 +23,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  Cell,
   ResponsiveContainer,
 } from "recharts"
 import type { Transaction, Wallet, NewTransaction } from "@/lib/types"
@@ -279,7 +280,7 @@ export default function Dashboard() {
                           />
                           <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                             {summary.categoryData.map((entry, i) => (
-                              <rect key={i} fill={entry.color} />
+                              <Cell key={i} fill={entry.color} />
                             ))}
                           </Bar>
                         </BarChart>
