@@ -26,6 +26,7 @@
 - No large sweeping changes unless explicitly required
 - Run `npm run lint` (tsc --noEmit) and `npm run test` before every commit
 - If lint or tests fail, fix them before committing
+- **Commit only, no push** — user will push explicitly when ready
 - **Every project modification must include updating the corresponding documentation** (REQUIREMENTS.md, ARCHITECTURE.md, or both) to reflect the changes made
 
 ## Testing Strategy

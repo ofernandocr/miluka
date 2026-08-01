@@ -25,9 +25,11 @@ import type { Transaction, Wallet, NewTransaction, Budget } from "@/lib/types"
 type TimeRange = "month" | "all"
 
 function isInCurrentMonth(dateStr: string): boolean {
-  const d = new Date(dateStr)
+  const parts = dateStr.split("-")
+  const y = Number(parts[0])
+  const m = Number(parts[1])
   const now = new Date()
-  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+  return m - 1 === now.getMonth() && y === now.getFullYear()
 }
 
 function filterByTimeRange(transactions: Transaction[], timeRange: TimeRange): Transaction[] {
