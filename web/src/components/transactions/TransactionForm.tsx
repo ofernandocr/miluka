@@ -28,7 +28,9 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
   const [description, setDescription] = useState(initialData?.description ?? "")
   const [categoryId, setCategoryId] = useState(initialData?.category_id ?? "")
   const [walletId, setWalletId] = useState(initialData?.wallet_id ?? wallets[0]?.id ?? "")
-  const [date, setDate] = useState(initialData?.date ?? new Date().toISOString().split("T")[0]!)
+  const today = new Date()
+  const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+  const [date, setDate] = useState(initialData?.date ?? localDate)
   const [submitting, setSubmitting] = useState(false)
 
   const selectedWallet = wallets.find((w) => w.id === walletId)
