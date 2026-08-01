@@ -184,7 +184,7 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
-            className="pl-8"
+            className="pl-12"
           />
         </div>
       </div>

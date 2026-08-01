@@ -113,7 +113,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
-            className="pl-8"
+            className="pl-12"
           />
         </div>
       </div>
