@@ -98,7 +98,7 @@ export default function Transactions() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex h-64 items-center justify-center" role="status" aria-label="Loading">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     )
@@ -184,6 +184,7 @@ export default function Transactions() {
           </span>
           <button
             onClick={() => setCategoryFilter("")}
+            aria-label="Remove category filter"
             className="ml-1 rounded-full p-0.5 hover:bg-accent"
           >
             <X className="h-3 w-3" />

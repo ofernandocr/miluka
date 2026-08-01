@@ -17,7 +17,7 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
     <div className="flex items-center gap-4 rounded-lg border bg-card p-4">
       <div
         className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
-        style={{ backgroundColor: transaction.category?.color ?? "#374151" + "20" }}
+        style={{ backgroundColor: (transaction.category?.color ?? "#374151") + "20" }}
       >
         {transaction.category?.icon ?? "📦"}
       </div>
@@ -37,10 +37,10 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
         </p>
       </div>
       <div className="flex gap-1">
-        <Button variant="ghost" size="icon" onClick={() => onEdit(transaction.id)}>
+        <Button variant="ghost" size="icon" aria-label="Edit transaction" onClick={() => onEdit(transaction.id)}>
           <Pencil className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => onDelete(transaction.id)}>
+        <Button variant="ghost" size="icon" aria-label="Delete transaction" onClick={() => onDelete(transaction.id)}>
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>

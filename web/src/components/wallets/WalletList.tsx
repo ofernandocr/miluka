@@ -36,10 +36,10 @@ export function WalletList({ wallets, onEdit, onDelete }: WalletListProps) {
             </div>
           </div>
           <div className="flex gap-1">
-            <Button variant="ghost" size="sm" onClick={() => onEdit(w.id)}>
+            <Button variant="ghost" size="sm" aria-label={`Edit ${w.name}`} onClick={() => onEdit(w.id)}>
               <Pencil className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(w.id)}>
+            <Button variant="ghost" size="sm" aria-label={`Delete ${w.name}`} onClick={() => onDelete(w.id)}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           </div>

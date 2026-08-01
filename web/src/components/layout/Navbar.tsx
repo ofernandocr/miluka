@@ -34,6 +34,7 @@ export function Navbar() {
             <Link
               key={to}
               to={to}
+              aria-current={pathname === to ? "page" : undefined}
               className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                 pathname === to
                   ? "bg-primary/10 text-primary"
@@ -47,7 +48,7 @@ export function Navbar() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="ml-2">
+              <Button variant="ghost" size="sm" className="ml-2" aria-label="User menu">
                 {user?.email?.charAt(0).toUpperCase()}
               </Button>
             </DropdownMenuTrigger>

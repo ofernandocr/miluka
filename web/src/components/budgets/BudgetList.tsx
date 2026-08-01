@@ -57,10 +57,10 @@ function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & 
         <div className="flex items-center justify-between">
           <p className="truncate text-sm font-medium">{name}</p>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(budget.id)}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Edit budget" onClick={() => onEdit(budget.id)}>
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDelete(budget.id)}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Delete budget" onClick={() => onDelete(budget.id)}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
