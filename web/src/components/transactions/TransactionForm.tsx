@@ -113,7 +113,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
-            className="pl-16"
+            style={{ paddingLeft: `${(selectedWallet ? getCurrencySymbol(selectedWallet.currency) : "$").length * 0.6 + 1.5}rem` }}
           />
         </div>
       </div>

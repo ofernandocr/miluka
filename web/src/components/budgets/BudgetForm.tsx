@@ -184,7 +184,7 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
-            className="pl-16"
+            style={{ paddingLeft: `${getCurrencySymbol(currency).length * 0.6 + 1.5}rem` }}
           />
         </div>
       </div>
