@@ -1,16 +1,13 @@
 import { Navigate } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import type { ReactNode } from "react"
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center" role="status" aria-label="Loading">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
+    return <LoadingSpinner fullScreen />
   }
 
   if (!user) {

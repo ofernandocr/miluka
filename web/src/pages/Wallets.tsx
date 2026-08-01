@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { WalletList } from "@/components/wallets/WalletList"
 import { WalletForm } from "@/components/wallets/WalletForm"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import type { NewWallet } from "@/lib/types"
 
 export default function Wallets() {
@@ -34,11 +35,7 @@ export default function Wallets() {
   }
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center" role="status" aria-label="Loading">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   const currentWallet = editingWallet

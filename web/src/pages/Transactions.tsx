@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { TransactionList } from "@/components/transactions/TransactionList"
 import { TransactionForm } from "@/components/transactions/TransactionForm"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import {
   Select,
   SelectContent,
@@ -97,11 +98,7 @@ export default function Transactions() {
   }
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center" role="status" aria-label="Loading">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   const currentTx = editingTransaction

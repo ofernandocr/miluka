@@ -2,6 +2,9 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { IconPicker } from "@/components/ui/IconPicker"
+import { ColorPicker } from "@/components/ui/ColorPicker"
+import { FormActions } from "@/components/ui/FormActions"
 import type { NewCategory, Category } from "@/lib/types"
 
 const ICONS = ["🍔", "🚗", "🏠", "💡", "🏥", "🎬", "📚", "🛒", "✈️", "🎮", "👕", "💊", "🐾", "🎁", "💰", "📦"]
@@ -64,49 +67,10 @@ export function CategoryForm({ initialData, onSubmit, onCancel }: CategoryFormPr
         />
       </div>
 
-      <div className="space-y-2">
-        <Label>Icon</Label>
-        <div className="flex flex-wrap gap-2">
-          {ICONS.map((i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setIcon(i)}
-              className={`flex h-9 w-9 items-center justify-center rounded-md text-lg transition-colors ${
-                icon === i ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-accent"
-              }`}
-            >
-              {i}
-            </button>
-          ))}
-        </div>
-      </div>
+      <IconPicker icons={ICONS} value={icon} onChange={setIcon} />
+      <ColorPicker colors={COLORS} value={color} onChange={setColor} />
 
-      <div className="space-y-2">
-        <Label>Color</Label>
-        <div className="flex flex-wrap gap-2">
-          {COLORS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setColor(c)}
-              className={`h-8 w-8 rounded-full transition-transform ${
-                color === c ? "scale-110 ring-2 ring-ring ring-offset-2" : ""
-              }`}
-              style={{ backgroundColor: c }}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="flex gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
-        </Button>
-        <Button type="submit" disabled={submitting} className="flex-1">
-          {submitting ? "Saving..." : initialData ? "Update" : "Create"}
-        </Button>
-      </div>
+      <FormActions onCancel={onCancel} submitting={submitting} isEdit={!!initialData} />
     </form>
   )
 }

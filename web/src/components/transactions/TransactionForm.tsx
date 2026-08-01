@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { FormActions } from "@/components/ui/FormActions"
 import type { Category, NewTransaction, Transaction, Wallet } from "@/lib/types"
 import { getCurrencySymbol } from "@/lib/utils"
 
@@ -158,14 +159,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
         />
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
-        </Button>
-        <Button type="submit" disabled={submitting} className="flex-1">
-          {submitting ? "Saving..." : initialData ? "Update" : "Save"}
-        </Button>
-      </div>
+      <FormActions onCancel={onCancel} submitting={submitting} isEdit={!!initialData} />
     </form>
   )
 }

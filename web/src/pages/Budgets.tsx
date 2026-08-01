@@ -7,8 +7,10 @@ import { useWallets } from "@/hooks/useWallets"
 import { useTransactions } from "@/hooks/useTransactions"
 import { Button } from "@/components/ui/button"
 import { BudgetForm } from "@/components/budgets/BudgetForm"
-import { BudgetList, computeBudgetSpent } from "@/components/budgets/BudgetList"
+import { BudgetList } from "@/components/budgets/BudgetList"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { computeBudgetSpent } from "@/lib/budgets"
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import type { NewBudget } from "@/lib/types"
 
 export default function Budgets() {
@@ -46,11 +48,7 @@ export default function Budgets() {
   const loading = budgetsLoading || txLoading
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center" role="status" aria-label="Loading">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   const currentBudget = editingBudget

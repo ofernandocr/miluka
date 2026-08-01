@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { FormActions } from "@/components/ui/FormActions"
 import type { Budget, NewBudget, Category, Wallet } from "@/lib/types"
 import { getCurrencySymbol } from "@/lib/utils"
 
@@ -189,14 +190,7 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
         </div>
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
-        </Button>
-        <Button type="submit" disabled={submitting} className="flex-1">
-          {submitting ? "Saving..." : initialData ? "Update" : "Create"}
-        </Button>
-      </div>
+      <FormActions onCancel={onCancel} submitting={submitting} isEdit={!!initialData} />
     </form>
   )
 }
