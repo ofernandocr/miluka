@@ -23,7 +23,7 @@ export default function App() {
             <ProtectedRoute>
               <div className="min-h-screen bg-background">
                 <Navbar />
-                <main>
+                <main id="main-content" tabIndex={-1}>
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/transactions" element={<Transactions />} />

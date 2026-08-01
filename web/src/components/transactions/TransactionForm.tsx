@@ -56,11 +56,13 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex gap-2" role="radiogroup" aria-label="Transaction type">
         <Button
           type="button"
           variant={type === "expense" ? "default" : "outline"}
           size="sm"
+          role="radio"
+          aria-checked={type === "expense"}
           onClick={() => { setType("expense"); setCategoryId("") }}
           className="flex-1"
         >
@@ -70,6 +72,8 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
           type="button"
           variant={type === "income" ? "default" : "outline"}
           size="sm"
+          role="radio"
+          aria-checked={type === "income"}
           onClick={() => { setType("income"); setCategoryId("") }}
           className="flex-1"
         >

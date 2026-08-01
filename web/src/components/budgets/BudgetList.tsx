@@ -47,7 +47,14 @@ function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & 
 
         <p className="text-xs text-muted-foreground">{getPeriodLabel(budget)}</p>
 
-        <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-secondary">
+        <div
+          className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-secondary"
+          role="progressbar"
+          aria-valuenow={Math.round(pct)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${name} budget progress: ${Math.round(pct)}%`}
+        >
           <div
             className={`h-full rounded-full transition-all ${getProgressColor(pct)}`}
             style={{ width: `${Math.min(pct, 100)}%` }}

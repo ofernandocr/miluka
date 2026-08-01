@@ -35,11 +35,13 @@ export function CategoryForm({ initialData, onSubmit, onCancel }: CategoryFormPr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex gap-2" role="radiogroup" aria-label="Category type">
         <Button
           type="button"
           variant={type === "expense" ? "default" : "outline"}
           size="sm"
+          role="radio"
+          aria-checked={type === "expense"}
           onClick={() => setType("expense")}
           className="flex-1"
         >
@@ -49,6 +51,8 @@ export function CategoryForm({ initialData, onSubmit, onCancel }: CategoryFormPr
           type="button"
           variant={type === "income" ? "default" : "outline"}
           size="sm"
+          role="radio"
+          aria-checked={type === "income"}
           onClick={() => setType("income")}
           className="flex-1"
         >

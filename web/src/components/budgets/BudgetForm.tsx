@@ -67,7 +67,7 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label>Budget Type</Label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Budget type">
           {([
             ["wallet", "By Wallet"],
             ["category_wallet", "Category + Wallet"],
@@ -77,6 +77,8 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
               type="button"
               variant={budgetType === value ? "default" : "outline"}
               size="sm"
+              role="radio"
+              aria-checked={budgetType === value}
               onClick={() => setBudgetType(value)}
             >
               {label}
@@ -128,11 +130,13 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
 
       <div className="space-y-2">
         <Label>Period</Label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Budget period">
           <Button
             type="button"
             variant={periodType === "monthly" ? "default" : "outline"}
             size="sm"
+            role="radio"
+            aria-checked={periodType === "monthly"}
             onClick={() => setPeriodType("monthly")}
           >
             Monthly
@@ -141,6 +145,8 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
             type="button"
             variant={periodType === "custom" ? "default" : "outline"}
             size="sm"
+            role="radio"
+            aria-checked={periodType === "custom"}
             onClick={() => setPeriodType("custom")}
           >
             Custom Period

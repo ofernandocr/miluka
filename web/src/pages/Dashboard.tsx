@@ -219,7 +219,14 @@ export default function Dashboard() {
                             {formatCurrency(cat.spent, summary.wallet.currency)}
                           </span>
                         </div>
-                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                        <div
+                          className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-secondary"
+                          role="progressbar"
+                          aria-valuenow={Math.round(barPct)}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-label={`${cat.name} ${hasBudget ? "budget" : "spending"} progress: ${Math.round(barPct)}%`}
+                        >
                           <div
                             className={`h-full rounded-full transition-all ${hasBudget ? barColor : ""}`}
                             style={barStyle}

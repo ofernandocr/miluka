@@ -47,6 +47,7 @@ export default function Register() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                aria-describedby={error ? "auth-error" : undefined}
                 required
               />
             </div>
@@ -62,7 +63,7 @@ export default function Register() {
                 required
               />
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p className="text-sm text-destructive" role="alert" id="auth-error">{error}</p>}
             <Button type="submit" className="w-full">
               Sign up
             </Button>
