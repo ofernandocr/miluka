@@ -1,5 +1,7 @@
 import { useMemo } from "react"
+import { Receipt } from "lucide-react"
 import { TransactionItem } from "./TransactionItem"
+import { EmptyState } from "@/components/ui/EmptyState"
 import { getCurrencySymbol } from "@/lib/utils"
 import type { Transaction, Wallet } from "@/lib/types"
 
@@ -56,9 +58,11 @@ export function TransactionList({ transactions, wallets, onEdit, onDelete }: Tra
 
   if (transactions.length === 0) {
     return (
-      <p className="py-12 text-center text-muted-foreground">
-        No transactions yet. Tap the button above to add one.
-      </p>
+      <EmptyState
+        icon={<Receipt className="h-6 w-6" />}
+        title="No transactions yet"
+        description="Tap the button above to add one."
+      />
     )
   }
 

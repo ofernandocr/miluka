@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus } from "lucide-react"
+import { Plus, BarChart3 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
@@ -18,6 +18,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { TransactionForm } from "@/components/transactions/TransactionForm"
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
+import { EmptyState } from "@/components/ui/EmptyState"
 import { computeBudgetSpent, getProgressColor, getProgressTextColor } from "@/lib/budgets"
 import { filterByTimeRange, buildUnifiedCategories, computeWalletSummaries } from "@/lib/dashboard"
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
@@ -85,7 +86,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-2">
           {wallets.length > 1 && (
             <Select value={selectedWalletId} onValueChange={setSelectedWalletId}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-40" aria-label="Select wallet">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -121,9 +122,11 @@ export default function Dashboard() {
       </div>
 
       {visibleSummaries.length === 0 && (
-        <p className="py-8 text-center text-muted-foreground">
-          No transactions yet. Add one to get started.
-        </p>
+        <EmptyState
+          icon={<BarChart3 className="h-6 w-6" />}
+          title="No transactions yet"
+          description="Add one to get started."
+        />
       )}
 
       {visibleSummaries.map((summary) => {
@@ -139,7 +142,9 @@ export default function Dashboard() {
                 className="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
                 style={{ backgroundColor: summary.wallet.color + "20" }}
               >
-                {summary.wallet.icon}
+                <span role="img" aria-label={summary.wallet.name}>
+                  {summary.wallet.icon}
+                </span>
               </div>
               <div>
                 <h2 className="text-lg font-bold">{summary.wallet.name}</h2>
@@ -213,7 +218,7 @@ export default function Dashboard() {
                             </span>
                           )}
                           <span className="flex-1 mx-3 truncate text-sm font-medium">
-                            {cat.icon} {cat.name}
+                            <span role="img" aria-label={cat.name}>{cat.icon}</span> {cat.name}
                           </span>
                           <span className="text-sm font-semibold tabular-nums">
                             {formatCurrency(cat.spent, summary.wallet.currency)}

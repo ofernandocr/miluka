@@ -122,6 +122,7 @@ export default function Transactions() {
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search..."
+            aria-label="Search transactions"
             value={queryFilter}
             onChange={(e) => setQueryFilter(e.target.value)}
             className="h-9 w-44 pl-8 text-sm"
@@ -129,7 +130,7 @@ export default function Transactions() {
         </div>
 
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32" aria-label="Filter by type">
             <SelectValue placeholder="All types" />
           </SelectTrigger>
           <SelectContent>
@@ -140,7 +141,7 @@ export default function Transactions() {
         </Select>
 
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-44" aria-label="Filter by category">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>

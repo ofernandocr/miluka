@@ -1,6 +1,7 @@
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, PiggyBank } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { EmptyState } from "@/components/ui/EmptyState"
 import type { Budget } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
 import { getProgressColor, getProgressTextColor, getPeriodLabel } from "@/lib/budgets"
@@ -86,9 +87,11 @@ export function BudgetList({ budgets, onEdit, onDelete }: BudgetListProps) {
 
   if (budgets.length === 0) {
     return (
-      <p className="py-12 text-center text-muted-foreground">
-        No budgets yet. Tap the button above to create one.
-      </p>
+      <EmptyState
+        icon={<PiggyBank className="h-6 w-6" />}
+        title="No budgets yet"
+        description="Tap the button above to create one."
+      />
     )
   }
 

@@ -85,7 +85,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
         <div className="space-y-2">
           <Label htmlFor="wallet">Wallet</Label>
           <Select value={walletId} onValueChange={setWalletId}>
-            <SelectTrigger>
+            <SelectTrigger aria-label="Select wallet">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -126,7 +126,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
       <div className="space-y-2">
         <Label htmlFor="category">Category</Label>
         <Select value={categoryId} onValueChange={setCategoryId} required>
-          <SelectTrigger>
+          <SelectTrigger aria-label="Select category">
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>

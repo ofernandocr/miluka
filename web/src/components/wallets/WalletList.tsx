@@ -1,5 +1,6 @@
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, Landmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/EmptyState"
 import type { Wallet } from "@/lib/types"
 import { getCurrencySymbol } from "@/lib/utils"
 
@@ -11,7 +12,13 @@ interface WalletListProps {
 
 export function WalletList({ wallets, onEdit, onDelete }: WalletListProps) {
   if (wallets.length === 0) {
-    return <p className="text-center text-muted-foreground py-8">No wallets yet. Create one to get started.</p>
+    return (
+      <EmptyState
+        icon={<Landmark className="h-6 w-6" />}
+        title="No wallets yet"
+        description="Create one to get started."
+      />
+    )
   }
 
   return (
@@ -26,7 +33,9 @@ export function WalletList({ wallets, onEdit, onDelete }: WalletListProps) {
               className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
               style={{ backgroundColor: w.color + "20" }}
             >
-              {w.icon}
+              <span role="img" aria-label={w.name}>
+                {w.icon}
+              </span>
             </div>
             <div>
               <p className="font-medium">{w.name}</p>

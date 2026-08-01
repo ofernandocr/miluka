@@ -1,5 +1,6 @@
-import { Pencil, Trash2, Lock } from "lucide-react"
+import { Pencil, Trash2, Lock, Tags } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/EmptyState"
 import type { Category } from "@/lib/types"
 
 interface CategoryListProps {
@@ -11,9 +12,11 @@ interface CategoryListProps {
 export function CategoryList({ categories, onEdit, onDelete }: CategoryListProps) {
   if (categories.length === 0) {
     return (
-      <p className="py-12 text-center text-muted-foreground">
-        No categories yet. Create one to get started.
-      </p>
+      <EmptyState
+        icon={<Tags className="h-6 w-6" />}
+        title="No categories yet"
+        description="Create one to get started."
+      />
     )
   }
 
@@ -29,7 +32,9 @@ export function CategoryList({ categories, onEdit, onDelete }: CategoryListProps
         className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
         style={{ backgroundColor: cat.color + "20" }}
       >
-        {cat.icon}
+        <span role="img" aria-label={cat.name}>
+          {cat.icon}
+        </span>
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">

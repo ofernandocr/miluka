@@ -90,7 +90,7 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
       <div className="space-y-2">
         <Label>Wallet</Label>
         <Select value={walletId} onValueChange={setWalletId} required>
-          <SelectTrigger>
+          <SelectTrigger aria-label="Select wallet">
             <SelectValue placeholder="Select wallet" />
           </SelectTrigger>
           <SelectContent>
@@ -111,7 +111,7 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
         <div className="space-y-2">
           <Label>Category</Label>
           <Select value={categoryId} onValueChange={setCategoryId} required>
-            <SelectTrigger>
+            <SelectTrigger aria-label="Select category">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>

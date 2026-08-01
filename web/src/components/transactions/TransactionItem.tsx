@@ -19,7 +19,9 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
         className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
         style={{ backgroundColor: (transaction.category?.color ?? "#374151") + "20" }}
       >
-        {transaction.category?.icon ?? "📦"}
+        <span role="img" aria-label={transaction.category?.name ?? "Category"}>
+          {transaction.category?.icon ?? "📦"}
+        </span>
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-medium truncate">
