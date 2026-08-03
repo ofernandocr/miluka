@@ -244,7 +244,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
   const categoryGridButtons = () => (
     <div className="space-y-3">
       <Label>Category</Label>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+      <div className="grid max-h-[50vh] grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
         {filteredCategories.map((cat) => (
           <Button
             key={cat.id}
