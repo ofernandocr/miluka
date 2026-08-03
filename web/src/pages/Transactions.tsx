@@ -198,7 +198,7 @@ export default function Transactions() {
       />
 
       <Dialog open={dialogOpen || !!editingTransaction} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingTransaction(null) }}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingTransaction ? "Edit Transaction" : "New Transaction"}</DialogTitle>
           </DialogHeader>
