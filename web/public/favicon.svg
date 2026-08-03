@@ -1,4 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="20" fill="#0f172a"/>
-  <text x="50" y="68" font-size="55" text-anchor="middle" fill="#3b82f6">🐷</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+    <clipPath id="rounded">
+      <rect width="512" height="512" rx="96" ry="96"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#rounded)">
+    <rect width="512" height="512" fill="url(#bg)"/>
+
+    <!-- PiggyBank icon from lucide, scaled and centered -->
+    <g transform="translate(70, 56) scale(16.5)" fill="#f1f5f9" fill-rule="evenodd">
+      <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/>
+      <path d="M2 9v1c0 1.1.9 2 2 2h1"/>
+    </g>
+  </g>
 </svg>
