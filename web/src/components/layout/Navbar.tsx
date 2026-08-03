@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { BarChart3, Wallet, Tags, LogOut, PiggyBank, Landmark, Receipt } from "lucide-react"
+import { BarChart3, Wallet, Tags, LogOut, PiggyBank, Landmark, Receipt, Settings } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
 import {
@@ -59,6 +59,12 @@ export function Navbar() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link to="/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem className="text-xs text-muted-foreground" disabled>
                 {user?.email}
               </DropdownMenuItem>

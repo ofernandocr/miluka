@@ -13,6 +13,7 @@
 - **Charts:** Recharts
 - **PWA:** vite-plugin-pwa
 - **Testing:** Vitest + React Testing Library + Mock Service Worker
+- **CSV:** papaparse
 - **Test DB:** Docker container for integration tests
 
 ## Code Conventions

@@ -45,5 +45,5 @@ export function useTransactions(userId: string | undefined) {
     await fetchTransactions()
   }
 
-  return { transactions, loading, createTransaction, updateTransaction, deleteTransaction }
+  return { transactions, loading, createTransaction, updateTransaction, deleteTransaction, refetch: fetchTransactions }
 }

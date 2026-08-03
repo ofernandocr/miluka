@@ -132,13 +132,39 @@ Two budget types, both requiring a wallet:
 
 ---
 
-## 6. Bank Notification Detection (future phase)
+## 6. Data Import / Export
 
-### 6.1 Platforms
+### 6.1 CSV Export
+- Export all transactions as CSV with human-readable columns: date, type, amount, description, category (name), wallet (name), currency, id
+- Download triggered from Settings page
+
+### 6.2 CSV Import
+- Upload CSV file with transaction data
+- Name-based resolution: category name → category_id, wallet name → wallet_id
+- Flexible date parsing: YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, and natural language
+- Validation: type (expense/income), amount (>0), category (required, must exist), date (valid)
+- Duplicate detection: if CSV row has `id` column matching existing transaction → skip
+- Import flow: Upload → Preview (valid/warning/error rows) → Confirm → Summary
+- Warning: wallet not found → saved without wallet
+- Error: category not found, invalid type, invalid amount, invalid date
+
+### 6.3 Full Backup (JSON)
+- Export all user data: transactions, categories, wallets, budgets
+- JSON format with metadata (exported_at timestamp)
+
+### 6.4 Settings Page (`/settings`)
+- Accessible from user dropdown menu in Navbar
+- Sections: Profile, Data Management (Import CSV, Export CSV, Export JSON)
+
+---
+
+## 7. Bank Notification Detection (future phase)
+
+### 7.1 Platforms
 - Android: NotificationListenerService
 - iOS: Notification Service Extension (limited)
 
-### 6.2 Behavior
+### 7.2 Behavior
 - Detect incoming notifications from known banking apps
 - Parse amount, merchant, and date
 - Create a draft transaction for user confirmation
@@ -146,7 +172,7 @@ Two budget types, both requiring a wallet:
 
 ---
 
-## 7. Code Conventions
+## 8. Code Conventions
 
 - All code, comments, commits, and docs in English
 - Feature-by-feature commits: each feature is fully implemented and testable before moving to the next
@@ -156,24 +182,24 @@ Two budget types, both requiring a wallet:
 
 ---
 
-## 8. Deployment
+## 9. Deployment
 
-### 8.1 Production Stack
+### 9.1 Production Stack
 - **Frontend:** Cloudflare Pages (static hosting, unlimited bandwidth, free SSL)
 - **Backend:** Supabase Cloud (managed auth, REST API, PostgreSQL)
 - **Mobile:** PWA (Progressive Web App — installable from browser)
 
-### 8.2 Free Tier Limits
+### 9.2 Free Tier Limits
 | Service | Limit |
 |---------|-------|
 | Supabase Cloud | 500MB DB, 50K MAU, 5GB bandwidth |
 | Cloudflare Pages | Unlimited bandwidth, 500 builds/month |
 
-### 8.3 Environment Variables
+### 9.3 Environment Variables
 - `VITE_SUPABASE_URL` — Supabase project URL (e.g., `https://xyz.supabase.co`)
 - `VITE_SUPABASE_ANON_KEY` — Supabase anonymous key (public, safe for client)
 
-### 8.4 PWA Requirements
+### 9.4 PWA Requirements
 - Icons: `web/public/icons/icon-192.png` and `icon-512.png`
 - Manifest configured in `vite.config.ts`
 - Auto-updating service worker via `vite-plugin-pwa`

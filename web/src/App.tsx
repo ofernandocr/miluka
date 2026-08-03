@@ -9,6 +9,7 @@ import Transactions from "@/pages/Transactions"
 import Categories from "@/pages/Categories"
 import Wallets from "@/pages/Wallets"
 import Budgets from "@/pages/Budgets"
+import Settings from "@/pages/Settings"
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
                     <Route path="/categories" element={<Categories />} />
                     <Route path="/wallets" element={<Wallets />} />
                     <Route path="/budgets" element={<Budgets />} />
+                    <Route path="/settings" element={<Settings />} />
                   </Routes>
                 </main>
               </div>

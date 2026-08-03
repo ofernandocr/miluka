@@ -43,6 +43,7 @@ miluka/
         ├── lib/
         │   ├── supabase.ts   # Supabase client (Kong URL)
         │   ├── types.ts      # TypeScript interfaces
+        │   ├── csv.ts        # CSV import/export logic (papaparse)
         │   └── utils.ts      # cn(), formatCurrency(), CURRENCIES
         ├── hooks/
         │   ├── useAuth.ts    # Auth state (user, signIn, signUp, signOut)
@@ -56,8 +57,10 @@ miluka/
         │   ├── budgets/      # BudgetForm, BudgetList
         │   ├── categories/   # CategoryList, CategoryForm
         │   ├── transactions/ # TransactionList, TransactionForm, TransactionItem
+        │   ├── transactions/ # TransactionList, TransactionForm, TransactionItem, CsvImportDialog
+        │   ├── exports/      # ExportSection (CSV/JSON export)
         │   └── wallets/      # WalletList, WalletForm
-        └── pages/            # Route pages (Login, Register, Dashboard, Transactions, Categories, Wallets, Budgets)
+        └── pages/            # Route pages (Login, Register, Dashboard, Transactions, Categories, Wallets, Budgets, Settings)
 ```
 
 ## Data Model
