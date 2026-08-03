@@ -68,6 +68,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
   }, [])
 
   const handleSubmit = async () => {
+    if (!categoryId || !amount || parseFloat(amount) <= 0) return
     setSubmitting(true)
     try {
       await onSubmit({
@@ -211,7 +212,8 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
           onKeyDown={large ? handleAmountKeyDown : undefined}
           onKeyUp={large ? handleAmountBackspace : undefined}
           required
-          className={large ? "h-12 pl-12 text-lg" : "pl-12"}
+          className={large ? "h-12 text-lg" : ""}
+          style={{ paddingLeft: `${(selectedWallet ? getCurrencySymbol(selectedWallet.currency) : "$").length * 0.7 + 1.5}rem` }}
           autoFocus={large}
         />
       </div>
