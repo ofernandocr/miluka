@@ -48,16 +48,21 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
   const totalSteps = skipWallet ? 5 : 6
   const [step, setStep] = useState(0)
 
+  const AMOUNT_STEP = skipWallet ? 1 : 2
+  const CATEGORY_STEP = skipWallet ? 2 : 3
+  const DESC_STEP = skipWallet ? 3 : 4
+  const DATE_STEP = skipWallet ? 4 : 5
+
   const focusEl = useCallback((ref: React.RefObject<HTMLInputElement | null>) => {
     setTimeout(() => ref.current?.focus(), 50)
   }, [])
 
   useEffect(() => {
     if (isEdit) return
-    if (step === 2) focusEl(amountRef)
-    else if (step === 4) focusEl(descRef)
-    else if (step === 5) focusEl(dateRef)
-  }, [step, isEdit, focusEl])
+    if (step === AMOUNT_STEP) focusEl(amountRef)
+    else if (step === DESC_STEP) focusEl(descRef)
+    else if (step === DATE_STEP) focusEl(dateRef)
+  }, [step, isEdit, focusEl, AMOUNT_STEP, DESC_STEP, DATE_STEP])
 
   const goNext = useCallback(() => {
     setStep((s) => Math.min(s + 1, totalSteps - 1))
@@ -92,12 +97,12 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
       return
     }
     if (e.key !== "Enter") return
-    if (step === 3 && !categoryId) return
-    if (step === 2 && (!amount || parseFloat(amount) <= 0)) return
+    if (step === CATEGORY_STEP && !categoryId) return
+    if (step === AMOUNT_STEP && (!amount || parseFloat(amount) <= 0)) return
     e.preventDefault()
     if (step === totalSteps - 1) handleSubmit()
     else goNext()
-  }, [isEdit, step, categoryId, amount, totalSteps, goNext, onCancel])
+  }, [isEdit, step, categoryId, amount, totalSteps, goNext, onCancel, AMOUNT_STEP, CATEGORY_STEP])
 
   const handleAmountKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -133,15 +138,10 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
   }
 
   const stepLabel = () => {
-    switch (step) {
-      case 0: return "What type of transaction?"
-      case 1: return "Which wallet?"
-      case 2: return "How much?"
-      case 3: return "Category?"
-      case 4: return skipWallet ? "Description? (optional)" : "Description? (optional)"
-      case 5: return "Date?"
-      default: return ""
-    }
+    const labels = skipWallet
+      ? ["What type of transaction?", "How much?", "Category?", "Description? (optional)", "Date?"]
+      : ["What type of transaction?", "Which wallet?", "How much?", "Category?", "Description? (optional)", "Date?"]
+    return labels[step] ?? ""
   }
 
   const typeButtons = (size: "lg" | "sm" = "sm") => (
@@ -328,11 +328,11 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
       <p className="text-center text-sm text-muted-foreground">{stepLabel()}</p>
 
       {step === 0 && typeButtons("lg")}
-      {step === 1 && !skipWallet && walletSelect(true)}
-      {step === 2 && amountField(true)}
-      {step === 3 && categoryGridButtons()}
-      {step === 4 && descriptionField(true)}
-      {step === 5 && dateField(true)}
+      {!skipWallet && step === 1 && walletSelect(true)}
+      {step === AMOUNT_STEP && amountField(true)}
+      {step === CATEGORY_STEP && categoryGridButtons()}
+      {step === DESC_STEP && descriptionField(true)}
+      {step === DATE_STEP && dateField(true)}
 
       {/* Navigation */}
       <div className="flex items-center justify-between pt-2">
@@ -357,8 +357,8 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
               type="button"
               size="sm"
               onClick={() => {
-                if (step === 2 && (!amount || parseFloat(amount) <= 0)) return
-                if (step === 3 && !categoryId) return
+                if (step === AMOUNT_STEP && (!amount || parseFloat(amount) <= 0)) return
+                if (step === CATEGORY_STEP && !categoryId) return
                 goNext()
               }}
             >
