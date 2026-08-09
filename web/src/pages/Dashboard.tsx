@@ -275,7 +275,7 @@ export default function Dashboard() {
                                 </span>
                               </div>
                               <p className={`text-xs ${isOverspent ? "text-red-500" : "text-muted-foreground"}`}>
-                                {subtitle || `${cat.pctOfTotal.toFixed(0)}% of total`}
+                                {subtitle || `${cat.pctOfTotal.toFixed(0)}%`}
                               </p>
 
                               {/* Progress bar */}
