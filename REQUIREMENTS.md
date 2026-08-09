@@ -102,6 +102,13 @@ Shows expense breakdown by category for the selected wallet(s) and time range. M
 - Sorted highest to lowest by amount
 - "Manage budgets →" link at bottom (only when budgets exist)
 
+### 4.5 Visual Design
+- Light/Dark theme with system preference detection
+- Collapsible sidebar (desktop) / bottom tab bar (mobile)
+- Staggered list animations for transactions, categories, wallets, budgets
+- Hover/tap effects on all interactive elements
+- Monospace numbers (JetBrains Mono) for financial data
+
 ---
 
 ## 5. Budgets

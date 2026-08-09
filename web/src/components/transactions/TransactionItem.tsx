@@ -14,7 +14,7 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
   const currency = transaction.wallet?.currency ?? "MXN"
 
   return (
-    <div className="flex items-center gap-4 rounded-lg border bg-card p-4">
+    <div className="flex items-center gap-4 bg-card p-4 transition-colors hover:bg-accent/50">
       <div
         className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
         style={{ backgroundColor: (transaction.category?.color ?? "#374151") + "20" }}
@@ -34,7 +34,7 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
         </p>
       </div>
       <div className="text-right">
-        <p className={`font-semibold tabular-nums ${isExpense ? "text-red-500" : "text-green-500"}`}>
+        <p className={`font-semibold tabular-nums ${isExpense ? "text-negative" : "text-positive"}`}>
           {isExpense ? "-" : "+"}{formatCurrency(Number(transaction.amount), currency)}
         </p>
       </div>

@@ -8,7 +8,18 @@
     <meta name="description" content="Personal expense tracker" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <script>
+      (function() {
+        var stored = localStorage.getItem('theme')
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        var resolved = stored === 'dark' || (!stored && prefersDark) || stored === 'system' && prefersDark ? 'dark' : 'light'
+        if (resolved === 'dark') {
+          document.documentElement.classList.add('dark')
+        }
+        document.documentElement.style.colorScheme = resolved
+      })()
+    </script>
     <title>miLuka</title>
   </head>
   <body class="min-h-screen bg-background font-sans antialiased">

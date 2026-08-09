@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, BarChart3 } from "lucide-react"
+import { BarChart3, TrendingUp, TrendingDown, Wallet } from "lucide-react"
+import { motion } from "motion/react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
 import { useWallets } from "@/hooks/useWallets"
 import { useBudgets } from "@/hooks/useBudgets"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -19,12 +19,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { TransactionForm } from "@/components/transactions/TransactionForm"
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import { EmptyState } from "@/components/ui/EmptyState"
-import { computeBudgetSpent, getProgressColor, getProgressTextColor } from "@/lib/budgets"
+import { FloatingActionButton } from "@/components/ui/FloatingActionButton"
+import { computeBudgetSpent } from "@/lib/budgets"
 import { filterByTimeRange, buildUnifiedCategories, computeWalletSummaries } from "@/lib/dashboard"
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
 
 import type { NewTransaction, Budget } from "@/lib/types"
 import type { TimeRange } from "@/lib/dashboard"
+
+const stagger = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+}
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } },
+}
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -79,9 +90,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 pb-24 lg:pb-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
 
         <div className="flex items-center gap-2">
           {wallets.length > 1 && (
@@ -129,151 +140,186 @@ export default function Dashboard() {
         />
       )}
 
-      {visibleSummaries.map((summary) => {
-        const totalExpense = summary.categoryData.reduce((s, c) => s + c.value, 0)
-        const balance = summary.income - summary.expense
-        const budgetsForWallet = walletBudgets.get(summary.wallet.id) ?? []
-        const unified = buildUnifiedCategories(summary.categoryData, budgetsForWallet, totalExpense)
+      <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
+        {visibleSummaries.map((summary) => {
+          const totalExpense = summary.categoryData.reduce((s, c) => s + c.value, 0)
+          const balance = summary.income - summary.expense
+          const budgetsForWallet = walletBudgets.get(summary.wallet.id) ?? []
+          const unified = buildUnifiedCategories(summary.categoryData, budgetsForWallet, totalExpense)
 
-        return (
-          <div key={summary.wallet.id} className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
-                style={{ backgroundColor: summary.wallet.color + "20" }}
-              >
-                <span role="img" aria-label={summary.wallet.name}>
-                  {summary.wallet.icon}
-                </span>
+          return (
+            <motion.div key={summary.wallet.id} variants={fadeUp} className="space-y-4">
+              {/* Wallet Header */}
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
+                  style={{ backgroundColor: summary.wallet.color + "20" }}
+                >
+                  <span role="img" aria-label={summary.wallet.name}>
+                    {summary.wallet.icon}
+                  </span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold">{summary.wallet.name}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {getCurrencySymbol(summary.wallet.currency)} {summary.wallet.currency}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-bold">{summary.wallet.name}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {getCurrencySymbol(summary.wallet.currency)} {summary.wallet.currency}
-                </p>
+
+              {/* Bento Summary Cards */}
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 transition-all hover:shadow-elevated dark:from-emerald-950/40 dark:to-emerald-900/20">
+                  <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-emerald-500/10" />
+                  <div className="relative">
+                    <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15">
+                      <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-emerald-700/70 dark:text-emerald-400/70">Income</p>
+                    <p className="mt-1 text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+                      {formatCurrency(summary.income, summary.wallet.currency)}
+                    </p>
+                  </div>
+                </div>
+                <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-rose-50 to-rose-100/50 p-4 transition-all hover:shadow-elevated dark:from-rose-950/40 dark:to-rose-900/20">
+                  <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-rose-500/10" />
+                  <div className="relative">
+                    <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/15">
+                      <TrendingDown className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                    </div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-rose-700/70 dark:text-rose-400/70">Expenses</p>
+                    <p className="mt-1 text-2xl font-bold tabular-nums text-rose-700 dark:text-rose-300">
+                      {formatCurrency(summary.expense, summary.wallet.currency)}
+                    </p>
+                  </div>
+                </div>
+                <div className={`relative overflow-hidden rounded-2xl border p-4 transition-all hover:shadow-elevated ${
+                  balance >= 0
+                    ? "bg-gradient-to-br from-sky-50 to-sky-100/50 dark:from-sky-950/40 dark:to-sky-900/20"
+                    : "bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/40 dark:to-amber-900/20"
+                }`}>
+                  <div className={`absolute -right-2 -top-2 h-16 w-16 rounded-full ${
+                    balance >= 0 ? "bg-sky-500/10" : "bg-amber-500/10"
+                  }`} />
+                  <div className="relative">
+                    <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl ${
+                      balance >= 0 ? "bg-sky-500/15" : "bg-amber-500/15"
+                    }`}>
+                      <Wallet className={`h-4 w-4 ${
+                        balance >= 0 ? "text-sky-600 dark:text-sky-400" : "text-amber-600 dark:text-amber-400"
+                      }`} />
+                    </div>
+                    <p className={`text-xs font-medium uppercase tracking-wide ${
+                      balance >= 0 ? "text-sky-700/70 dark:text-sky-400/70" : "text-amber-700/70 dark:text-amber-400/70"
+                    }`}>Balance</p>
+                    <p className={`mt-1 text-2xl font-bold tabular-nums ${
+                      balance >= 0 ? "text-sky-700 dark:text-sky-300" : "text-amber-700 dark:text-amber-300"
+                    }`}>
+                      {formatCurrency(balance, summary.wallet.currency)}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Income</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-green-500">
-                    {formatCurrency(summary.income, summary.wallet.currency)}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Expenses</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-red-500">
-                    {formatCurrency(summary.expense, summary.wallet.currency)}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Balance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className={`text-2xl font-bold ${balance >= 0 ? "text-green-500" : "text-red-500"}`}>
-                    {formatCurrency(balance, summary.wallet.currency)}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+              {/* Spending by Category */}
+              {unified.length > 0 ? (
+                <div className="rounded-2xl border bg-card p-4 transition-shadow hover:shadow-elevated">
+                  <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Spending by Category</h3>
+                  <motion.div
+                    className="space-y-2"
+                    variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } }}
+                    initial="hidden"
+                    animate="show"
+                  >
+                    {(() => {
+                      const maxSpent = Math.max(...unified.map((c) => c.spent), 1)
+                      return unified.map((cat) => {
+                        const hasBudget = cat.budgetAmount !== null
+                        const barPct = hasBudget ? cat.budgetPct! : 0
+                        const remaining = hasBudget ? cat.budgetAmount! - cat.spent : 0
+                        const isOverspent = hasBudget && barPct > 100
 
-            {unified.length > 0 ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Spending by Category</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {unified.map((cat) => {
-                    const hasBudget = cat.budgetAmount !== null
-                    const barPct = hasBudget ? cat.budgetPct! : cat.pctOfTotal
-                    const barColor = hasBudget ? getProgressColor(barPct) : ""
-                    const barStyle = hasBudget
-                      ? { width: `${Math.min(barPct, 100)}%` }
-                      : { width: `${Math.min(cat.pctOfTotal, 100)}%`, backgroundColor: cat.color }
+                        const barWidth = hasBudget
+                          ? `${Math.min(barPct, 100)}%`
+                          : `${(cat.spent / maxSpent) * 100}%`
 
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={() => handleCategoryClick(cat.id)}
-                        className="w-full text-left transition-colors hover:bg-accent/50 rounded-lg px-3 py-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          {hasBudget ? (
-                            <span className={`text-sm font-semibold ${getProgressTextColor(barPct)}`}>
-                              {barPct.toFixed(0)}%
-                            </span>
-                          ) : (
-                            <span className="text-sm font-semibold" style={{ color: cat.color }}>
-                              {cat.pctOfTotal.toFixed(0)}%
-                            </span>
-                          )}
-                          <span className="flex-1 mx-3 truncate text-sm font-medium">
-                            <span role="img" aria-label={cat.name}>{cat.icon}</span> {cat.name}
-                          </span>
-                          <span className="text-sm font-semibold tabular-nums">
-                            {formatCurrency(cat.spent, summary.wallet.currency)}
-                          </span>
-                        </div>
-                        <div
-                          className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-secondary"
-                          role="progressbar"
-                          aria-valuenow={Math.round(barPct)}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-label={`${cat.name} ${hasBudget ? "budget" : "spending"} progress: ${Math.round(barPct)}%`}
-                        >
-                          <div
-                            className={`h-full rounded-full transition-all ${hasBudget ? barColor : ""}`}
-                            style={barStyle}
-                          />
-                        </div>
-                        {hasBudget && (
-                          <p className="mt-0.5 text-right text-[10px] text-muted-foreground">
-                            {formatCurrency(cat.spent, summary.wallet.currency)} / {formatCurrency(cat.budgetAmount!, summary.wallet.currency)}
-                          </p>
-                        )}
-                      </button>
-                    )
-                  })}
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                        const barBg = hasBudget
+                          ? isOverspent ? "#ef4444"
+                            : barPct > 85 ? "#f97316"
+                            : barPct > 60 ? "#eab308"
+                            : "hsl(var(--primary))"
+                          : cat.color
+
+                        const subtitle = hasBudget
+                          ? isOverspent
+                            ? `$${Math.abs(remaining).toLocaleString("en-US")} overspent`
+                            : `$${remaining.toLocaleString("en-US")} left to spend`
+                          : null
+
+                        return (
+                          <motion.button
+                            key={cat.id}
+                            variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}
+                            onClick={() => handleCategoryClick(cat.id)}
+                            className="group flex w-full items-center gap-3 rounded-xl bg-secondary/50 p-3 text-left transition-colors hover:bg-secondary/80"
+                          >
+                            {/* Icon */}
+                            <div
+                              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg"
+                              style={{ backgroundColor: cat.color + "20" }}
+                            >
+                              <span role="img" aria-label={cat.name}>{cat.icon}</span>
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className="truncate text-sm font-medium">{cat.name}</p>
+                                <span className="ml-2 shrink-0 text-sm font-bold tabular-nums text-foreground">
+                                  ${cat.spent.toLocaleString("en-US")}
+                                </span>
+                              </div>
+                              {subtitle && (
+                                <p className={`text-xs ${isOverspent ? "text-red-500" : "text-muted-foreground"}`}>{subtitle}</p>
+                              )}
+
+                              {/* Progress bar */}
+                              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-secondary">
+                                <motion.div
+                                  className="h-full rounded-full"
+                                  style={{ backgroundColor: barBg }}
+                                  initial={{ width: 0 }}
+                                  animate={{ width: barWidth }}
+                                  transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" as const }}
+                                />
+                              </div>
+                            </div>
+                          </motion.button>
+                        )
+                      })
+                    })()}
+                  </motion.div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border bg-card py-8 text-center text-sm text-muted-foreground">
                   No expenses in this wallet for the selected period.
-                </CardContent>
-              </Card>
-            )}
+                </div>
+              )}
 
-            {budgetsForWallet.length > 0 && (
-              <button
-                onClick={() => navigate("/budgets")}
-                className="w-full rounded-lg border border-dashed py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-              >
-                Manage budgets →
-              </button>
-            )}
-          </div>
-        )
-      })}
+              {budgetsForWallet.length > 0 && (
+                <button
+                  onClick={() => navigate("/budgets")}
+                  className="w-full rounded-lg border border-dashed py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                >
+                  Manage budgets →
+                </button>
+              )}
+            </motion.div>
+          )
+        })}
+      </motion.div>
 
-      <button
-        onClick={() => setDialogOpen(true)}
-        aria-label="New transaction"
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 active:scale-95"
-      >
-        <Plus className="h-6 w-6" />
-      </button>
+      <FloatingActionButton onClick={() => setDialogOpen(true)} />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

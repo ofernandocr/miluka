@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Toaster } from "sonner"
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute"
-import { Navbar } from "@/components/layout/Navbar"
+import { Sidebar } from "@/components/layout/Sidebar"
+import { BottomNav } from "@/components/layout/BottomNav"
 import Login from "@/pages/Login"
 import Register from "@/pages/Register"
 import Dashboard from "@/pages/Dashboard"
@@ -23,8 +24,8 @@ export default function App() {
           element={
             <ProtectedRoute>
               <div className="min-h-screen bg-background">
-                <Navbar />
-                <main id="main-content" tabIndex={-1}>
+                <Sidebar />
+                <main id="main-content" tabIndex={-1} className="lg:pl-[240px]">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/transactions" element={<Transactions />} />
@@ -34,6 +35,7 @@ export default function App() {
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 </main>
+                <BottomNav />
               </div>
             </ProtectedRoute>
           }

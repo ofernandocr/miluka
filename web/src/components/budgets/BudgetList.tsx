@@ -1,4 +1,5 @@
 import { Pencil, Trash2, PiggyBank } from "lucide-react"
+import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/EmptyState"
@@ -16,6 +17,11 @@ interface BudgetListProps {
   onDelete: (id: string) => void
 }
 
+const itemVariants = {
+  hidden: { opacity: 0, y: 6 },
+  show: { opacity: 1, y: 0 },
+}
+
 function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & Pick<BudgetListProps, "onEdit" | "onDelete">) {
   const pct = budget.amount > 0 ? (budget.spent / budget.amount) * 100 : 0
   const remaining = budget.amount - budget.spent
@@ -27,7 +33,7 @@ function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & 
     : `${budget.wallet?.icon ?? "💼"} ${budget.wallet?.name ?? "Wallet"}`
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border p-3">
+    <motion.div variants={itemVariants} className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50">
       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-lg"
         style={{ backgroundColor: (budget.category?.color ?? budget.wallet?.color ?? "#6b7280") + "20" }}>
         {icon}
@@ -77,7 +83,7 @@ function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & 
           </span>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -98,14 +104,20 @@ export function BudgetList({ budgets, onEdit, onDelete }: BudgetListProps) {
   const renderSection = (title: string, items: BudgetWithSpent[]) => {
     if (items.length === 0) return null
     return (
-      <Card>
+      <Card className="transition-shadow hover:shadow-elevated">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {items.map((b) => (
-            <BudgetCard key={b.id} budget={b} onEdit={onEdit} onDelete={onDelete} />
-          ))}
+          <motion.div
+            variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }}
+            initial="hidden"
+            animate="show"
+          >
+            {items.map((b) => (
+              <BudgetCard key={b.id} budget={b} onEdit={onEdit} onDelete={onDelete} />
+            ))}
+          </motion.div>
         </CardContent>
       </Card>
     )

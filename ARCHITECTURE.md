@@ -34,12 +34,12 @@ miluka/
 └── web/                      # React frontend
     ├── Dockerfile.dev        # Node 20 dev container
     ├── vite.config.ts        # Vite + Vitest config
-    ├── tailwind.config.ts    # Tailwind CSS config
+    ├── tailwind.config.ts    # Tailwind CSS config (Inter + JetBrains Mono, surface tokens, shadows)
     ├── tsconfig.json         # TypeScript config
     └── src/
-        ├── App.tsx           # Router setup
+        ├── App.tsx           # Router + responsive layout (Sidebar desktop / BottomNav mobile)
         ├── main.tsx          # Entry point
-        ├── index.css         # Global styles (dark theme)
+        ├── index.css         # Global styles (Light + Dark themes, surface tokens, transitions)
         ├── lib/
         │   ├── supabase.ts   # Supabase client (Kong URL)
         │   ├── types.ts      # TypeScript interfaces
@@ -49,14 +49,14 @@ miluka/
         │   ├── useAuth.ts    # Auth state (user, signIn, signUp, signOut)
         │   ├── useBudgets.ts # Budget CRUD (+ category, wallet join)
         │   ├── useCategories.ts  # Category CRUD
+        │   ├── useTheme.ts   # Theme management (system/light/dark, localStorage)
         │   ├── useTransactions.ts # Transaction CRUD (+ category, wallet join)
         │   └── useWallets.ts  # Wallet CRUD
         ├── components/
-        │   ├── layout/       # Navbar, ProtectedRoute
-        │   ├── ui/           # shadcn/ui primitives (button, card, dialog, etc.)
+        │   ├── layout/       # Sidebar, BottomNav, ProtectedRoute
+        │   ├── ui/           # shadcn/ui primitives (button, card, dialog, ThemeToggle, FloatingActionButton)
         │   ├── budgets/      # BudgetForm, BudgetList
         │   ├── categories/   # CategoryList, CategoryForm
-        │   ├── transactions/ # TransactionList, TransactionForm, TransactionItem
         │   ├── transactions/ # TransactionList, TransactionForm, TransactionItem, CsvImportDialog
         │   ├── exports/      # ExportSection (CSV/JSON export)
         │   └── wallets/      # WalletList, WalletForm
@@ -121,6 +121,37 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
   - `filterByTimeRange(transactions, timeRange)` — filters by current month
   - `computeWalletSummaries(transactions, wallets)` — groups transactions per wallet, computes income/expense/categoryData per wallet
   - `computeCategoryData(transactions)` — aggregates expense amounts by category for a single wallet's transactions
+
+## Design System
+
+### Theme Support
+- **Light mode** (default) + **Dark mode** via CSS variables
+- Theme persisted in `localStorage`, system preference detected on first visit
+- Anti-flash script in `index.html` prevents white flash on load
+- Smooth transitions via CSS `transition: background-color 0.3s, color 0.3s`
+
+### Typography
+- **UI:** Inter (Google Fonts) — clean, legible at all sizes
+- **Monospace/Numbers:** JetBrains Mono — tabular figures for financial data
+- Font loaded via Google Fonts with `display=swap` for performance
+
+### Color System
+- Semantic tokens: `positive` (green), `negative` (red), `caution` (amber)
+- Surface hierarchy: `base` → `raised` → `overlay` with color-tinted shadows
+- Shadow tokens: `shadow-card`, `shadow-elevated`, `shadow-float`
+- All colors defined as CSS variables in `index.css` with dark mode overrides
+
+### Navigation
+- **Desktop (≥1024px):** Collapsible sidebar (240px expanded / 64px collapsed)
+- **Mobile (<1024px):** Bottom tab bar + floating action button (FAB)
+- FAB for quick add transaction on all screen sizes
+- Sidebar persists state in `localStorage`
+
+### Animations
+- `motion` library (Framer Motion v11) for stagger, layout, and gesture animations
+- Staggered list entries (0.03-0.06s delay per item)
+- Hover/tap effects on cards and interactive elements
+- `prefers-reduced-motion` media query respected for accessibility
 
 ## Formatting Utilities (`web/src/lib/utils.ts`)
 

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
-import { Plus, Filter, X, Search } from "lucide-react"
+import { Filter, X, Search } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { TransactionList } from "@/components/transactions/TransactionList"
 import { TransactionForm } from "@/components/transactions/TransactionForm"
+import { FloatingActionButton } from "@/components/ui/FloatingActionButton"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import {
@@ -109,10 +110,6 @@ export default function Transactions() {
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Transactions</h1>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Transaction
-        </Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -196,6 +193,8 @@ export default function Transactions() {
         onEdit={openEdit}
         onDelete={handleDelete}
       />
+
+      <FloatingActionButton onClick={() => setDialogOpen(true)} />
 
       <Dialog open={dialogOpen || !!editingTransaction} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingTransaction(null) }}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
