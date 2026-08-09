@@ -170,8 +170,8 @@ export default function Dashboard() {
               {/* Bento Summary Cards */}
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 transition-all hover:shadow-elevated dark:from-emerald-950/40 dark:to-emerald-900/20">
-                  <div className="pointer-events-none absolute -right-4 top-1/2 -translate-y-1/2">
-                    <TrendingUp className="h-28 w-28 text-emerald-500/8 dark:text-emerald-400/8" />
+                  <div className="pointer-events-none absolute -right-2 top-1/2 -translate-y-1/2">
+                    <TrendingUp className="h-16 w-16 text-emerald-500/5 dark:text-emerald-400/5" />
                   </div>
                   <div className="relative">
                     <p className="text-xs font-medium uppercase tracking-wide text-emerald-700/70 dark:text-emerald-400/70">Income</p>
@@ -181,8 +181,8 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-rose-50 to-rose-100/50 p-4 transition-all hover:shadow-elevated dark:from-rose-950/40 dark:to-rose-900/20">
-                  <div className="pointer-events-none absolute -right-4 top-1/2 -translate-y-1/2">
-                    <TrendingDown className="h-28 w-28 text-rose-500/8 dark:text-rose-400/8" />
+                  <div className="pointer-events-none absolute -right-2 top-1/2 -translate-y-1/2">
+                    <TrendingDown className="h-16 w-16 text-rose-500/5 dark:text-rose-400/5" />
                   </div>
                   <div className="relative">
                     <p className="text-xs font-medium uppercase tracking-wide text-rose-700/70 dark:text-rose-400/70">Expenses</p>
@@ -196,11 +196,11 @@ export default function Dashboard() {
                     ? "bg-gradient-to-br from-sky-50 to-sky-100/50 dark:from-sky-950/40 dark:to-sky-900/20"
                     : "bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/40 dark:to-amber-900/20"
                 }`}>
-                  <div className="pointer-events-none absolute -right-4 top-1/2 -translate-y-1/2">
-                    <Wallet className={`h-28 w-28 ${
+                  <div className="pointer-events-none absolute -right-2 top-1/2 -translate-y-1/2">
+                    <Wallet className={`h-16 w-16 ${
                       balance >= 0
-                        ? "text-sky-500/8 dark:text-sky-400/8"
-                        : "text-amber-500/8 dark:text-amber-400/8"
+                        ? "text-sky-500/5 dark:text-sky-400/5"
+                        : "text-amber-500/5 dark:text-amber-400/5"
                     }`} />
                   </div>
                   <div className="relative">
