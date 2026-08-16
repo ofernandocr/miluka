@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { TransactionList } from "@/components/transactions/TransactionList"
 import { TransactionForm } from "@/components/transactions/TransactionForm"
 import { QuickAddFab } from "@/components/ui/QuickAddFab"
-import { QuickAmountDialog } from "@/components/ui/QuickAmountDialog"
+import { QuickAddDialog } from "@/components/ui/QuickAddDialog"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import {
@@ -93,7 +93,7 @@ export default function Transactions() {
     setDialogOpen(false)
   }
 
-  const handleQuickAdd = async (amount: number) => {
+  const handleQuickAdd = async (amount: number, description: string) => {
     if (!quickCategory) return
     const walletId = wallets[0]?.id ?? null
     const today = new Date()
@@ -102,7 +102,7 @@ export default function Transactions() {
       await createTransaction({
         type: "expense",
         amount,
-        description: null,
+        description,
         category_id: quickCategory.id,
         wallet_id: walletId,
         date: localDate,
@@ -230,7 +230,7 @@ export default function Transactions() {
         onFullForm={() => setDialogOpen(true)}
       />
 
-      <QuickAmountDialog
+      <QuickAddDialog
         open={!!quickCategory}
         category={quickCategory}
         currency={wallets[0]?.currency ?? "MXN"}

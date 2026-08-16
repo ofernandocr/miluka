@@ -6,29 +6,35 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import type { Category } from "@/lib/types"
 import { getCurrencySymbol } from "@/lib/utils"
 
-interface QuickAmountDialogProps {
+interface QuickAddDialogProps {
   open: boolean
   category: Category | null
   currency: string
   onOpenChange: (open: boolean) => void
-  onConfirm: (amount: number) => Promise<void>
+  onConfirm: (amount: number, description: string) => Promise<void>
 }
 
-export function QuickAmountDialog({ open, category, currency, onOpenChange, onConfirm }: QuickAmountDialogProps) {
+export function QuickAddDialog({ open, category, currency, onOpenChange, onConfirm }: QuickAddDialogProps) {
   const [amount, setAmount] = useState("")
+  const [description, setDescription] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
   const handleOpenChange = (next: boolean) => {
     onOpenChange(next)
-    if (next) setAmount("")
+    if (next) {
+      setAmount("")
+      setDescription("")
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!amount || parseFloat(amount) <= 0) return
+    const desc = description.trim()
+    if (!desc) return
     setSubmitting(true)
     try {
-      await onConfirm(Number(amount))
+      await onConfirm(Number(amount), desc)
     } finally {
       setSubmitting(false)
     }
@@ -63,6 +69,17 @@ export function QuickAmountDialog({ open, category, currency, onOpenChange, onCo
                 style={{ paddingLeft: `${getCurrencySymbol(currency).length * 0.7 + 1.5}rem` }}
               />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="quick-description">Description</Label>
+            <Input
+              id="quick-description"
+              type="text"
+              placeholder="What was this for?"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+            />
           </div>
           <div className="flex gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
