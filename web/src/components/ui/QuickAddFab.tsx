@@ -31,7 +31,7 @@ export function QuickAddFab({ quickCategories, onQuickAdd, onFullForm }: QuickAd
 
       <AnimatePresence>
         {open && (
-          <div className="fixed bottom-24 right-4 z-30 flex flex-col items-end gap-3 lg:bottom-14">
+          <div className="fixed bottom-36 right-4 z-30 flex flex-col items-end gap-3 lg:bottom-24">
             {quickCategories.map((cat, i) => (
               <motion.button
                 key={cat.id}
