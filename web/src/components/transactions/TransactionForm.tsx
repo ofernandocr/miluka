@@ -73,6 +73,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
   }, [])
 
   const handleSubmit = async () => {
+    if (submitting) return
     if (!categoryId || !amount || parseFloat(amount) <= 0) return
     setSubmitting(true)
     try {
@@ -108,6 +109,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
     if (e.key === "Enter") {
       if (!amount || parseFloat(amount) <= 0) return
       e.preventDefault()
+      e.stopPropagation()
       goNext()
     }
   }
@@ -122,10 +124,12 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
   const handleDescKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault()
+      e.stopPropagation()
       goNext()
     }
     if (e.key === "Backspace" && description === "") {
       e.preventDefault()
+      e.stopPropagation()
       goBack()
     }
   }
@@ -133,6 +137,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
   const handleDateKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault()
+      e.stopPropagation()
       handleSubmit()
     }
   }
@@ -312,7 +317,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
 
   // ── Create mode: wizard ──
   return (
-    <form onSubmit={(e) => { e.preventDefault(); handleSubmit() }} onKeyDown={handleKeyDown} className="space-y-6">
+    <form onSubmit={(e) => { e.preventDefault(); if (!submitting) handleSubmit() }} onKeyDown={handleKeyDown} className="space-y-6">
       {/* Progress dots */}
       <div className="flex items-center justify-center gap-2" aria-label={`Step ${step + 1} of ${totalSteps}`}>
         {Array.from({ length: totalSteps }).map((_, i) => (
