@@ -145,7 +145,7 @@ $$;
 grant execute on function public.generate_recurring_transactions() to authenticated;
 
 -- RPC: Generate a single transaction from a specific recurring template
-create or replace function public.generate_recurring_transaction(p_recurring_id uuid)
+create or replace function public.generate_recurring_transaction(p_recurring_id uuid, p_amount decimal(12,2) default null, p_date date default CURRENT_DATE)
 returns void
 language plpgsql
 security definer set search_path = ''
@@ -163,7 +163,7 @@ begin
   if not found then return; end if;
 
   insert into public.transactions (user_id, wallet_id, category_id, amount, description, date, type)
-  values (rec.user_id, rec.wallet_id, rec.category_id, rec.amount, rec.description, CURRENT_DATE, rec.type);
+  values (rec.user_id, rec.wallet_id, rec.category_id, coalesce(p_amount, rec.amount), rec.description, p_date, rec.type);
 
   case rec.frequency
     when 'weekly' then
@@ -199,7 +199,7 @@ begin
 end;
 $$;
 
-grant execute on function public.generate_recurring_transaction(uuid) to authenticated;
+grant execute on function public.generate_recurring_transaction(uuid, decimal, date) to authenticated;
 
 -- Reload PostgREST schema cache
 NOTIFY pgrst, 'reload schema';

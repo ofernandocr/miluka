@@ -71,8 +71,11 @@ export function useRecurringTransactions(userId: string | undefined) {
     await fetchRecurring()
   }
 
-  const generateNow = async (id: string) => {
-    const { error } = await supabase.rpc("generate_recurring_transaction", { p_recurring_id: id })
+  const generateNow = async (id: string, amount?: number, date?: string) => {
+    const params: Record<string, unknown> = { p_recurring_id: id }
+    if (amount) params.p_amount = amount
+    if (date) params.p_date = date
+    const { error } = await supabase.rpc("generate_recurring_transaction", params)
     if (error) throw error
     await fetchRecurring()
   }

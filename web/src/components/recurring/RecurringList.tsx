@@ -1,18 +1,21 @@
-import { Pencil, Trash2, Pause, Play, Repeat, Plus } from "lucide-react"
+import { Pencil, Trash2, Pause, Play, Repeat } from "lucide-react"
 import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/EmptyState"
-import type { RecurringTransaction } from "@/lib/types"
+import { QuickActionsMenu } from "@/components/recurring/QuickActionsMenu"
+import type { RecurringTransaction, Category } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
 import { getScheduleDescription, isDueOrOverdue } from "@/lib/recurring"
 
 interface RecurringListProps {
   recurring: RecurringTransaction[]
+  quickCategories: Category[]
   onEdit: (id: string) => void
   onDelete: (id: string) => void
   onToggleActive: (id: string, isActive: boolean) => void
-  onGenerateNow: (id: string) => void
+  onGenerateFromTemplate: (item: RecurringTransaction) => void
+  onQuickAdd: (category: Category) => void
 }
 
 const itemVariants = {
@@ -20,7 +23,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0 },
 }
 
-function RecurringCard({ item, onEdit, onDelete, onToggleActive, onGenerateNow }: { item: RecurringTransaction } & Pick<RecurringListProps, "onEdit" | "onDelete" | "onToggleActive" | "onGenerateNow">) {
+function RecurringCard({ item, quickCategories, onEdit, onDelete, onToggleActive, onGenerateFromTemplate, onQuickAdd }: { item: RecurringTransaction; quickCategories: Category[] } & Pick<RecurringListProps, "onEdit" | "onDelete" | "onToggleActive" | "onGenerateFromTemplate" | "onQuickAdd">) {
   const currency = item.wallet?.currency ?? "MXN"
   const icon = item.category?.icon ?? "🔄"
   const name = item.category?.name ?? "Recurring"
@@ -47,15 +50,11 @@ function RecurringCard({ item, onEdit, onDelete, onToggleActive, onGenerateNow }
           </div>
           <div className="flex gap-1">
             {item.is_active && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-primary"
-                aria-label="Generate now"
-                onClick={() => onGenerateNow(item.id)}
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
+              <QuickActionsMenu
+                quickCategories={quickCategories}
+                onGenerateFromTemplate={() => onGenerateFromTemplate(item)}
+                onQuickAdd={onQuickAdd}
+              />
             )}
             <Button
               variant="ghost"
@@ -88,7 +87,7 @@ function RecurringCard({ item, onEdit, onDelete, onToggleActive, onGenerateNow }
   )
 }
 
-export function RecurringList({ recurring, onEdit, onDelete, onToggleActive, onGenerateNow }: RecurringListProps) {
+export function RecurringList({ recurring, quickCategories, onEdit, onDelete, onToggleActive, onGenerateFromTemplate, onQuickAdd }: RecurringListProps) {
   const active = recurring.filter((r) => r.is_active)
   const paused = recurring.filter((r) => !r.is_active)
 
@@ -116,7 +115,7 @@ export function RecurringList({ recurring, onEdit, onDelete, onToggleActive, onG
             animate="show"
           >
             {items.map((r) => (
-              <RecurringCard key={r.id} item={r} onEdit={onEdit} onDelete={onDelete} onToggleActive={onToggleActive} onGenerateNow={onGenerateNow} />
+              <RecurringCard key={r.id} item={r} quickCategories={quickCategories} onEdit={onEdit} onDelete={onDelete} onToggleActive={onToggleActive} onGenerateFromTemplate={onGenerateFromTemplate} onQuickAdd={onQuickAdd} />
             ))}
           </motion.div>
         </CardContent>
