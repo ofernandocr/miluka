@@ -62,3 +62,31 @@ export interface Budget {
 }
 
 export type NewBudget = Pick<Budget, "amount" | "category_id" | "wallet_id" | "start_date" | "end_date">
+
+// === Recurring Transactions ===
+
+export type RecurringFrequency = "weekly" | "monthly" | "quarterly" | "yearly"
+
+export interface RecurringTransaction {
+  id: string
+  user_id: string
+  wallet_id: string | null
+  category_id: string
+  amount: number
+  description: string | null
+  type: TransactionType
+  frequency: RecurringFrequency
+  day_of_month: number | null
+  next_due_date: string
+  is_active: boolean
+  last_generated_date: string | null
+  created_at: string
+  updated_at: string
+  category?: Category
+  wallet?: Wallet
+}
+
+export type NewRecurringTransaction = Pick<
+  RecurringTransaction,
+  "amount" | "description" | "type" | "category_id" | "wallet_id" | "frequency" | "day_of_month"
+>

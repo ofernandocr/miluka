@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { BarChart3, Wallet, Tags, Landmark, Receipt } from "lucide-react"
+import { BarChart3, Wallet, Tags, Landmark, Receipt, Repeat } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { to: "/categories", icon: Tags, label: "Categories" },
   { to: "/wallets", icon: Landmark, label: "Wallets" },
   { to: "/budgets", icon: Receipt, label: "Budgets" },
+  { to: "/recurring", icon: Repeat, label: "Recurring" },
 ] as const
 
 export function BottomNav() {

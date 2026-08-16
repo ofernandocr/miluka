@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { BarChart3, Wallet, Tags, Landmark, Receipt, Settings, PiggyBank, ChevronLeft, LogOut } from "lucide-react"
+import { BarChart3, Wallet, Tags, Landmark, Receipt, Repeat, Settings, PiggyBank, ChevronLeft, LogOut } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { cn } from "@/lib/utils"
 
@@ -10,6 +10,7 @@ const navItems = [
   { to: "/categories", icon: Tags, label: "Categories" },
   { to: "/wallets", icon: Landmark, label: "Wallets" },
   { to: "/budgets", icon: Receipt, label: "Budgets" },
+  { to: "/recurring", icon: Repeat, label: "Recurring" },
 ] as const
 
 export function Sidebar() {

@@ -21,7 +21,8 @@ miluka/
 │   ├── 007_shared_categories.sql    # Shared categories model (user_id=NULL defaults)
 │   ├── 008_seed_transactions.sql    # Idempotent seed script for test data
 │   ├── 009_budgets.sql       # Budgets table + RLS + unique constraint
-│   └── 010_budget_periods.sql # Add start_date, end_date to budgets
+│   ├── 010_budget_periods.sql # Add start_date, end_date to budgets
+│   └── 011_recurring_transactions.sql # Recurring templates + RPC generation
 │
 ├── supabase/                 # Supabase service configs
 │   ├── kong.yml              # API gateway routes
@@ -49,6 +50,7 @@ miluka/
         │   ├── useAuth.ts    # Auth state (user, signIn, signUp, signOut)
         │   ├── useBudgets.ts # Budget CRUD (+ category, wallet join)
         │   ├── useCategories.ts  # Category CRUD
+        │   ├── useRecurringTransactions.ts # Recurring CRUD + auto-generation
         │   ├── useTheme.ts   # Theme management (system/light/dark, localStorage)
         │   ├── useTransactions.ts # Transaction CRUD (+ category, wallet join)
         │   └── useWallets.ts  # Wallet CRUD
@@ -56,11 +58,12 @@ miluka/
         │   ├── layout/       # Sidebar, BottomNav, ProtectedRoute
         │   ├── ui/           # shadcn/ui primitives (button, card, dialog, ThemeToggle, FloatingActionButton)
         │   ├── budgets/      # BudgetForm, BudgetList
+        │   ├── recurring/    # RecurringForm, RecurringList, RecurringOverdueBanner
         │   ├── categories/   # CategoryList, CategoryForm
         │   ├── transactions/ # TransactionList, TransactionForm, TransactionItem, CsvImportDialog
         │   ├── exports/      # ExportSection (CSV/JSON export)
         │   └── wallets/      # WalletList, WalletForm
-        └── pages/            # Route pages (Login, Register, Dashboard, Transactions, Categories, Wallets, Budgets, Settings)
+        └── pages/            # Route pages (Login, Register, Dashboard, Transactions, Categories, Wallets, Budgets, Recurring, Settings)
 ```
 
 ## Data Model
@@ -74,12 +77,14 @@ miluka/
 | `categories`  | N:1 profiles (nullable), 1:N transactions  | Yes | Shared defaults (user_id=NULL) + user-specific |
 | `transactions`| N:1 profiles, N:1 wallets, N:1 categories  | Yes | wallet_id nullable (backfilled to default) |
 | `budgets`     | N:1 profiles, N:1 wallets, N:1 categories  | Yes | Period: monthly (NULL dates) or custom (start/end) |
+| `recurring_transactions` | N:1 profiles, N:1 wallets, N:1 categories | Yes | Templates for auto-generated transactions |
 
 ### Key Constraints
 - `wallets(user_id, name)` — unique wallet names per user
 - `transactions.amount > 0` — positive amounts only
 - `transactions.type IN ('expense', 'income')`
 - `budgets(user_id, COALESCE(category_id,''), COALESCE(wallet_id,''))` — one budget per user/category/wallet combination
+- `recurring_transactions(user_id, category_id, COALESCE(wallet_id,''), frequency)` — one template per user/category/wallet/frequency
 - `profiles.currency` is kept for backwards compatibility; wallets table is the source of truth for transaction currency
 
 ### Default Wallet
@@ -265,3 +270,22 @@ See `DEPLOY.md` for full deployment instructions.
 - Currency exchange rate API for cross-wallet totals
 - Bank notification detection on Android/iOS
 - Offline support (PWA service worker)
+
+## Recurring Transactions
+
+### Automation Strategy
+- Client-side RPC on app load: `generate_recurring_transactions()`
+- Checks for templates with `next_due_date <= TODAY`
+- Generates real transactions in the `transactions` table
+- Updates `next_due_date` and `last_generated_date` on each template
+- Idempotent: `last_generated_date` prevents double-generation
+
+### Frequency Support
+- Weekly, Monthly, Quarterly, Yearly
+- `day_of_month` (1-28) for monthly/quarterly/yearly — capped at 28 to avoid Feb edge cases
+- Weekly ignores `day_of_month`
+
+### UI Location
+- Separate page `/recurring` with its own nav item
+- Overdue banner on page load when templates are past due
+- Pause/resume toggle per template

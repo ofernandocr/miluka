@@ -156,7 +156,7 @@ Two budget types, both requiring a wallet:
 - Error: category not found, invalid type, invalid amount, invalid date
 
 ### 6.3 Full Backup (JSON)
-- Export all user data: transactions, categories, wallets, budgets
+- Export all user data: transactions, categories, wallets, budgets, recurring templates
 - JSON format with metadata (exported_at timestamp)
 
 ### 6.4 Settings Page (`/settings`)
@@ -165,13 +165,53 @@ Two budget types, both requiring a wallet:
 
 ---
 
-## 7. Bank Notification Detection (future phase)
+## 7. Recurring Transactions
 
-### 7.1 Platforms
+### 7.1 Purpose
+Let users define fixed recurring expenses (rent, subscriptions, utilities) that automatically generate real transactions each month.
+
+### 7.2 Recurring Transactions Table
+| Column           | Type          | Notes                                    |
+|-----------------|---------------|------------------------------------------|
+| id              | uuid          | PK, default gen_random_uuid()            |
+| user_id         | uuid          | FK → profiles(id), NOT NULL              |
+| wallet_id       | uuid          | FK → wallets(id), nullable               |
+| category_id     | uuid          | FK → categories(id), NOT NULL            |
+| amount          | decimal(12,2) | NOT NULL, check (amount > 0)             |
+| description     | text          | nullable                                 |
+| type            | text          | 'expense' or 'income'                    |
+| frequency       | text          | 'weekly', 'monthly', 'quarterly', 'yearly' |
+| day_of_month    | smallint      | 1-28, nullable (used for monthly+)       |
+| next_due_date   | date          | NOT NULL — next generation date          |
+| is_active       | boolean       | default true — pause/resume toggle       |
+| last_generated_date | date      | nullable — prevents double-generation    |
+| created_at      | timestamptz   | default now()                            |
+| updated_at      | timestamptz   | auto-updated via trigger                 |
+
+- Unique constraint: one template per user/category/wallet/frequency
+
+### 7.3 Automation
+- On app load, client calls `generate_recurring_transactions()` RPC
+- RPC inserts real transactions for all templates where `next_due_date <= TODAY`
+- After generation, `next_due_date` is advanced based on frequency
+- Idempotent: `last_generated_date` prevents re-generation
+
+### 7.4 UI
+- Separate page `/recurring` with nav item in Sidebar and BottomNav
+- RecurringForm: type, wallet, category, frequency, day of month, amount, description
+- RecurringList: grouped by active/paused, shows schedule, next due date, amount
+- RecurringOverdueBanner: warns when templates are past due
+- Pause/resume toggle per template
+
+---
+
+## 8. Bank Notification Detection (future phase)
+
+### 8.1 Platforms
 - Android: NotificationListenerService
 - iOS: Notification Service Extension (limited)
 
-### 7.2 Behavior
+### 8.2 Behavior
 - Detect incoming notifications from known banking apps
 - Parse amount, merchant, and date
 - Create a draft transaction for user confirmation
@@ -179,7 +219,7 @@ Two budget types, both requiring a wallet:
 
 ---
 
-## 8. Code Conventions
+## 9. Code Conventions
 
 - All code, comments, commits, and docs in English
 - Feature-by-feature commits: each feature is fully implemented and testable before moving to the next
@@ -189,24 +229,24 @@ Two budget types, both requiring a wallet:
 
 ---
 
-## 9. Deployment
+## 10. Deployment
 
-### 9.1 Production Stack
+### 10.1 Production Stack
 - **Frontend:** Cloudflare Pages (static hosting, unlimited bandwidth, free SSL)
 - **Backend:** Supabase Cloud (managed auth, REST API, PostgreSQL)
 - **Mobile:** PWA (Progressive Web App — installable from browser)
 
-### 9.2 Free Tier Limits
+### 10.2 Free Tier Limits
 | Service | Limit |
 |---------|-------|
 | Supabase Cloud | 500MB DB, 50K MAU, 5GB bandwidth |
 | Cloudflare Pages | Unlimited bandwidth, 500 builds/month |
 
-### 9.3 Environment Variables
+### 10.3 Environment Variables
 - `VITE_SUPABASE_URL` — Supabase project URL (e.g., `https://xyz.supabase.co`)
 - `VITE_SUPABASE_ANON_KEY` — Supabase anonymous key (public, safe for client)
 
-### 9.4 PWA Requirements
+### 10.4 PWA Requirements
 - Icons: `web/public/icons/icon-192.png` and `icon-512.png`
 - Manifest configured in `vite.config.ts`
 - Auto-updating service worker via `vite-plugin-pwa`
