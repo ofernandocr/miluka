@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Plus } from "lucide-react"
+import { toast } from "sonner"
 import { useAuth } from "@/hooks/useAuth"
 import { useRecurringTransactions } from "@/hooks/useRecurringTransactions"
 import { useCategories } from "@/hooks/useCategories"
@@ -21,6 +22,7 @@ export default function Recurring() {
     updateRecurring,
     deleteRecurring,
     toggleActive,
+    generateNow,
   } = useRecurringTransactions(user?.id)
   const { categories } = useCategories(user?.id)
   const { wallets } = useWallets(user?.id)
@@ -47,6 +49,15 @@ export default function Recurring() {
     await toggleActive(id, isActive)
   }
 
+  const handleGenerateNow = async (id: string) => {
+    try {
+      await generateNow(id)
+      toast.success("Transaction generated")
+    } catch {
+      toast.error("Failed to generate transaction")
+    }
+  }
+
   if (recurringLoading) {
     return <LoadingSpinner />
   }
@@ -70,6 +81,7 @@ export default function Recurring() {
         onEdit={(id) => setEditingId(id)}
         onDelete={handleDelete}
         onToggleActive={handleToggleActive}
+        onGenerateNow={handleGenerateNow}
       />
 
       <Dialog open={dialogOpen || !!editingId} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingId(null) }}>

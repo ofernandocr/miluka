@@ -71,6 +71,12 @@ export function useRecurringTransactions(userId: string | undefined) {
     await fetchRecurring()
   }
 
+  const generateNow = async (id: string) => {
+    const { error } = await supabase.rpc("generate_recurring_transaction", { p_recurring_id: id })
+    if (error) throw error
+    await fetchRecurring()
+  }
+
   return {
     recurring,
     loading,
@@ -78,6 +84,7 @@ export function useRecurringTransactions(userId: string | undefined) {
     updateRecurring,
     deleteRecurring,
     toggleActive,
+    generateNow,
     refetch: fetchRecurring,
   }
 }

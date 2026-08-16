@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Pause, Play, Repeat } from "lucide-react"
+import { Pencil, Trash2, Pause, Play, Repeat, Plus } from "lucide-react"
 import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,7 @@ interface RecurringListProps {
   onEdit: (id: string) => void
   onDelete: (id: string) => void
   onToggleActive: (id: string, isActive: boolean) => void
+  onGenerateNow: (id: string) => void
 }
 
 const itemVariants = {
@@ -19,7 +20,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0 },
 }
 
-function RecurringCard({ item, onEdit, onDelete, onToggleActive }: { item: RecurringTransaction } & Pick<RecurringListProps, "onEdit" | "onDelete" | "onToggleActive">) {
+function RecurringCard({ item, onEdit, onDelete, onToggleActive, onGenerateNow }: { item: RecurringTransaction } & Pick<RecurringListProps, "onEdit" | "onDelete" | "onToggleActive" | "onGenerateNow">) {
   const currency = item.wallet?.currency ?? "MXN"
   const icon = item.category?.icon ?? "🔄"
   const name = item.category?.name ?? "Recurring"
@@ -45,6 +46,17 @@ function RecurringCard({ item, onEdit, onDelete, onToggleActive }: { item: Recur
             )}
           </div>
           <div className="flex gap-1">
+            {item.is_active && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-primary"
+                aria-label="Generate now"
+                onClick={() => onGenerateNow(item.id)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -76,7 +88,7 @@ function RecurringCard({ item, onEdit, onDelete, onToggleActive }: { item: Recur
   )
 }
 
-export function RecurringList({ recurring, onEdit, onDelete, onToggleActive }: RecurringListProps) {
+export function RecurringList({ recurring, onEdit, onDelete, onToggleActive, onGenerateNow }: RecurringListProps) {
   const active = recurring.filter((r) => r.is_active)
   const paused = recurring.filter((r) => !r.is_active)
 
@@ -104,7 +116,7 @@ export function RecurringList({ recurring, onEdit, onDelete, onToggleActive }: R
             animate="show"
           >
             {items.map((r) => (
-              <RecurringCard key={r.id} item={r} onEdit={onEdit} onDelete={onDelete} onToggleActive={onToggleActive} />
+              <RecurringCard key={r.id} item={r} onEdit={onEdit} onDelete={onDelete} onToggleActive={onToggleActive} onGenerateNow={onGenerateNow} />
             ))}
           </motion.div>
         </CardContent>

@@ -144,5 +144,62 @@ $$;
 -- Grant execute to authenticated users
 grant execute on function public.generate_recurring_transactions() to authenticated;
 
+-- RPC: Generate a single transaction from a specific recurring template
+create or replace function public.generate_recurring_transaction(p_recurring_id uuid)
+returns void
+language plpgsql
+security definer set search_path = ''
+as $$
+declare
+  rec record;
+  new_next date;
+begin
+  select * into rec
+  from public.recurring_transactions
+  where id = p_recurring_id
+    and user_id = auth.uid()
+    and is_active = true;
+
+  if not found then return; end if;
+
+  insert into public.transactions (user_id, wallet_id, category_id, amount, description, date, type)
+  values (rec.user_id, rec.wallet_id, rec.category_id, rec.amount, rec.description, CURRENT_DATE, rec.type);
+
+  case rec.frequency
+    when 'weekly' then
+      new_next := rec.next_due_date + 7;
+    when 'monthly' then
+      new_next := rec.next_due_date + interval '1 month';
+      if rec.day_of_month is not null then
+        new_next := make_date(
+          extract(year from new_next)::int,
+          extract(month from new_next)::int,
+          least(rec.day_of_month, 28)
+        );
+      end if;
+    when 'quarterly' then
+      new_next := rec.next_due_date + interval '3 months';
+      if rec.day_of_month is not null then
+        new_next := make_date(
+          extract(year from new_next)::int,
+          extract(month from new_next)::int,
+          least(rec.day_of_month, 28)
+        );
+      end if;
+    when 'yearly' then
+      new_next := rec.next_due_date + interval '1 year';
+    else
+      new_next := rec.next_due_date + interval '1 month';
+  end case;
+
+  update public.recurring_transactions
+  set next_due_date = new_next,
+      last_generated_date = CURRENT_DATE
+  where id = p_recurring_id;
+end;
+$$;
+
+grant execute on function public.generate_recurring_transaction(uuid) to authenticated;
+
 -- Reload PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
