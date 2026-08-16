@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
+import { toast } from "sonner"
 import { BarChart3, TrendingUp, TrendingDown, Wallet } from "lucide-react"
 import { motion } from "motion/react"
 import { useAuth } from "@/hooks/useAuth"
@@ -19,12 +20,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { TransactionForm } from "@/components/transactions/TransactionForm"
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import { EmptyState } from "@/components/ui/EmptyState"
-import { FloatingActionButton } from "@/components/ui/FloatingActionButton"
+import { QuickAddFab } from "@/components/ui/QuickAddFab"
+import { QuickAmountDialog } from "@/components/ui/QuickAmountDialog"
 import { computeBudgetSpent } from "@/lib/budgets"
 import { filterByTimeRange, buildUnifiedCategories, computeWalletSummaries } from "@/lib/dashboard"
+import { getTopExpenseCategories } from "@/lib/quickAdd"
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
 
-import type { NewTransaction, Budget } from "@/lib/types"
+import type { NewTransaction, Budget, Category } from "@/lib/types"
 import type { TimeRange } from "@/lib/dashboard"
 
 const stagger = {
@@ -48,6 +51,12 @@ export default function Dashboard() {
   const [selectedWalletId, setSelectedWalletId] = useState<string>("all")
   const [timeRange, setTimeRange] = useState<TimeRange>("month")
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [quickCategory, setQuickCategory] = useState<Category | null>(null)
+
+  const topCategories = useMemo(
+    () => getTopExpenseCategories(transactions, categories),
+    [transactions, categories]
+  )
 
   const timeFiltered = useMemo(
     () => filterByTimeRange(transactions, timeRange),
@@ -83,6 +92,27 @@ export default function Dashboard() {
   const handleCreate = async (data: NewTransaction) => {
     await createTransaction(data)
     setDialogOpen(false)
+  }
+
+  const handleQuickAdd = async (amount: number) => {
+    if (!quickCategory) return
+    const walletId = wallets[0]?.id ?? null
+    const today = new Date()
+    const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+    try {
+      await createTransaction({
+        type: "expense",
+        amount,
+        description: null,
+        category_id: quickCategory.id,
+        wallet_id: walletId,
+        date: localDate,
+      })
+      setQuickCategory(null)
+      toast.success("Transaction added")
+    } catch {
+      toast.error("Failed to add transaction")
+    }
   }
 
   if (loading) {
@@ -314,7 +344,19 @@ export default function Dashboard() {
         })}
       </motion.div>
 
-      <FloatingActionButton onClick={() => setDialogOpen(true)} />
+      <QuickAddFab
+        quickCategories={topCategories}
+        onQuickAdd={(cat) => setQuickCategory(cat)}
+        onFullForm={() => setDialogOpen(true)}
+      />
+
+      <QuickAmountDialog
+        open={!!quickCategory}
+        category={quickCategory}
+        currency={wallets[0]?.currency ?? "MXN"}
+        onOpenChange={(open) => { if (!open) setQuickCategory(null) }}
+        onConfirm={handleQuickAdd}
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

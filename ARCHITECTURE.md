@@ -149,7 +149,7 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 ### Navigation
 - **Desktop (≥1024px):** Collapsible sidebar (240px expanded / 64px collapsed)
 - **Mobile (<1024px):** Bottom tab bar + floating action button (FAB)
-- FAB for quick add transaction on all screen sizes
+- FAB (`QuickAddFab`) opens a quick-add menu with the top 4 most-used expense categories (icons only) and a "New Transaction" option to open the full form; available on all screen sizes
 - Sidebar persists state in `localStorage`
 
 ### Animations
@@ -289,3 +289,5 @@ See `DEPLOY.md` for full deployment instructions.
 - Separate page `/recurring` with its own nav item
 - Overdue banner on page load when templates are past due
 - Pause/resume toggle per template
+- "+" per template opens a confirmation dialog to review/edit the amount and date before generating
+- Top 4 most-used expense categories are surfaced as icon-only quick-add shortcuts on the main FAB (Dashboard and Transactions pages), where the user only enters the amount

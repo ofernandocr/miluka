@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
+import { toast } from "sonner"
 import { Filter, X, Search } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
@@ -9,7 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { TransactionList } from "@/components/transactions/TransactionList"
 import { TransactionForm } from "@/components/transactions/TransactionForm"
-import { FloatingActionButton } from "@/components/ui/FloatingActionButton"
+import { QuickAddFab } from "@/components/ui/QuickAddFab"
+import { QuickAmountDialog } from "@/components/ui/QuickAmountDialog"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import {
@@ -19,7 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { NewTransaction } from "@/lib/types"
+import { getTopExpenseCategories } from "@/lib/quickAdd"
+import type { NewTransaction, Category } from "@/lib/types"
 
 export default function Transactions() {
   const { user } = useAuth()
@@ -31,6 +34,12 @@ export default function Transactions() {
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<string | null>(null)
+  const [quickCategory, setQuickCategory] = useState<Category | null>(null)
+
+  const topCategories = useMemo(
+    () => getTopExpenseCategories(transactions, categories),
+    [transactions, categories]
+  )
 
   const categoryFilter = searchParams.get("category") ?? ""
   const typeFilter = searchParams.get("type") ?? ""
@@ -82,6 +91,27 @@ export default function Transactions() {
   const handleCreate = async (data: NewTransaction) => {
     await createTransaction(data)
     setDialogOpen(false)
+  }
+
+  const handleQuickAdd = async (amount: number) => {
+    if (!quickCategory) return
+    const walletId = wallets[0]?.id ?? null
+    const today = new Date()
+    const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+    try {
+      await createTransaction({
+        type: "expense",
+        amount,
+        description: null,
+        category_id: quickCategory.id,
+        wallet_id: walletId,
+        date: localDate,
+      })
+      setQuickCategory(null)
+      toast.success("Transaction added")
+    } catch {
+      toast.error("Failed to add transaction")
+    }
   }
 
   const handleUpdate = async (data: NewTransaction) => {
@@ -194,7 +224,19 @@ export default function Transactions() {
         onDelete={handleDelete}
       />
 
-      <FloatingActionButton onClick={() => setDialogOpen(true)} />
+      <QuickAddFab
+        quickCategories={topCategories}
+        onQuickAdd={(cat) => setQuickCategory(cat)}
+        onFullForm={() => setDialogOpen(true)}
+      />
+
+      <QuickAmountDialog
+        open={!!quickCategory}
+        category={quickCategory}
+        currency={wallets[0]?.currency ?? "MXN"}
+        onOpenChange={(open) => { if (!open) setQuickCategory(null) }}
+        onConfirm={handleQuickAdd}
+      />
 
       <Dialog open={dialogOpen || !!editingTransaction} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingTransaction(null) }}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
