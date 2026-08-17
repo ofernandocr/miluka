@@ -81,14 +81,21 @@ export function QuickAddFab({ quickCategories, onQuickAdd, onFullForm }: QuickAd
         )}
       </AnimatePresence>
 
-      <button
-        onClick={() => setOpen(!open)}
-        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-float transition-all hover:scale-105 hover:shadow-lg active:scale-95 lg:bottom-8"
-        aria-label="Add transaction"
-        aria-expanded={open}
-      >
-        <Plus className="h-6 w-6" />
-      </button>
+      <AnimatePresence>
+        {!open && (
+          <motion.button
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => setOpen(true)}
+            className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-float transition-all hover:scale-105 hover:shadow-lg active:scale-95 lg:bottom-8"
+            aria-label="Add transaction"
+          >
+            <Plus className="h-6 w-6" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </>
   )
 }
