@@ -84,7 +84,7 @@ miluka/
 - `transactions.amount > 0` — positive amounts only
 - `transactions.type IN ('expense', 'income')`
 - `budgets(user_id, COALESCE(category_id,''), COALESCE(wallet_id,''))` — one budget per user/category/wallet combination
-- `recurring_transactions(user_id, category_id, COALESCE(wallet_id,''), frequency)` — one template per user/category/wallet/frequency
+- `recurring_transactions(user_id, category_id, COALESCE(wallet_id,''), COALESCE(description,''), frequency)` — one template per user/category/wallet/description/frequency; the Detalle (description) distinguishes multiple templates sharing the same category, wallet and frequency
 - `profiles.currency` is kept for backwards compatibility; wallets table is the source of truth for transaction currency
 
 ### Default Wallet
@@ -290,4 +290,5 @@ See `DEPLOY.md` for full deployment instructions.
 - Overdue banner on page load when templates are past due
 - Pause/resume toggle per template
 - "+" per template opens a confirmation dialog to review/edit the amount and date before generating
-- Top 4 most-used expense categories are surfaced as icon-only circular quick-add shortcuts on the main FAB (Dashboard and Transactions pages); selecting one opens a confirmation dialog that requires both amount and description
+- Top 4 most-used expense categories are surfaced as circular quick-add shortcuts (with name label) on the main FAB (Dashboard and Transactions pages); selecting one opens a minimal confirmation dialog that requires both amount and description
+- Duplicate prevention: the unique constraint includes the description, allowing multiple templates with the same category/wallet/frequency when the Detalle differs; the client pre-checks via `hasDuplicateRecurringTemplate` and falls back to a friendly toast on the 23505 error

@@ -12,6 +12,7 @@ import { RecurringOverdueBanner } from "@/components/recurring/RecurringOverdueB
 import { GenerateConfirmDialog } from "@/components/recurring/GenerateConfirmDialog"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
+import { hasDuplicateRecurringTemplate } from "@/lib/recurring"
 import type { NewRecurringTransaction, RecurringTransaction } from "@/lib/types"
 
 export default function Recurring() {
@@ -33,14 +34,30 @@ export default function Recurring() {
   const [generateItem, setGenerateItem] = useState<RecurringTransaction | null>(null)
 
   const handleCreate = async (data: NewRecurringTransaction) => {
-    await createRecurring(data)
-    setDialogOpen(false)
+    if (hasDuplicateRecurringTemplate(recurring, data)) {
+      toast.error("Duplicate template", { description: "A recurring template with the same category, wallet, description and frequency already exists." })
+      return
+    }
+    try {
+      await createRecurring(data)
+      setDialogOpen(false)
+    } catch (e) {
+      toast.error("Failed to create template", { description: e instanceof Error ? e.message : "Please try again." })
+    }
   }
 
   const handleUpdate = async (data: NewRecurringTransaction) => {
     if (!editingId) return
-    await updateRecurring(editingId, data)
-    setEditingId(null)
+    if (hasDuplicateRecurringTemplate(recurring, data, editingId)) {
+      toast.error("Duplicate template", { description: "A recurring template with the same category, wallet, description and frequency already exists." })
+      return
+    }
+    try {
+      await updateRecurring(editingId, data)
+      setEditingId(null)
+    } catch (e) {
+      toast.error("Failed to update template", { description: e instanceof Error ? e.message : "Please try again." })
+    }
   }
 
   const handleDelete = async (id: string) => {

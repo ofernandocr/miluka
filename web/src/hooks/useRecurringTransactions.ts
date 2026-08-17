@@ -49,13 +49,23 @@ export function useRecurringTransactions(userId: string | undefined) {
       user_id: userId,
       next_due_date: nextDue.toISOString().split("T")[0],
     })
-    if (error) throw error
+    if (error) {
+      if (error.code === "23505") {
+        throw new Error("A recurring template with the same category, wallet, description and frequency already exists.")
+      }
+      throw error
+    }
     await fetchRecurring()
   }
 
   const updateRecurring = async (id: string, updates: Partial<NewRecurringTransaction>) => {
     const { error } = await supabase.from("recurring_transactions").update(updates).eq("id", id)
-    if (error) throw error
+    if (error) {
+      if (error.code === "23505") {
+        throw new Error("A recurring template with the same category, wallet, description and frequency already exists.")
+      }
+      throw error
+    }
     await fetchRecurring()
   }
 

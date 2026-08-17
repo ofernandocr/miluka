@@ -1,4 +1,4 @@
-import type { RecurringTransaction, RecurringFrequency } from "@/lib/types"
+import type { RecurringTransaction, RecurringFrequency, NewRecurringTransaction } from "@/lib/types"
 
 export function computeNextDueDate(
   current: Date,
@@ -67,4 +67,22 @@ export function isDueOrOverdue(nextDueDate: string): boolean {
 
 export function getOverdueCount(recurring: RecurringTransaction[]): number {
   return recurring.filter((r) => r.is_active && isDueOrOverdue(r.next_due_date)).length
+}
+
+export function hasDuplicateRecurringTemplate(
+  recurring: RecurringTransaction[],
+  item: NewRecurringTransaction,
+  excludeId?: string
+): boolean {
+  const normalizeWallet = (id: string | null | undefined) => (id ? id : "")
+  const normalizeDesc = (d: string | null | undefined) => (d ? d : "")
+  return recurring.some((r) => {
+    if (excludeId && r.id === excludeId) return false
+    return (
+      r.category_id === item.category_id &&
+      normalizeWallet(r.wallet_id) === normalizeWallet(item.wallet_id) &&
+      normalizeDesc(r.description) === normalizeDesc(item.description) &&
+      r.frequency === item.frequency
+    )
+  })
 }

@@ -99,11 +99,13 @@ create table if not exists public.recurring_transactions (
 create index if not exists idx_recurring_user_active
   on public.recurring_transactions(user_id, is_active, next_due_date);
 
+-- Prevent duplicate templates (same user, category, wallet, description, frequency)
 create unique index if not exists recurring_transactions_user_cat_wallet_freq_key
   on public.recurring_transactions (
     user_id,
     category_id,
     coalesce(wallet_id::text, ''),
+    coalesce(description, ''),
     frequency
   );
 

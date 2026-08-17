@@ -188,7 +188,7 @@ Let users define fixed recurring expenses (rent, subscriptions, utilities) that 
 | created_at      | timestamptz   | default now()                            |
 | updated_at      | timestamptz   | auto-updated via trigger                 |
 
-- Unique constraint: one template per user/category/wallet/frequency
+- Unique constraint: one template per user/category/wallet/description/frequency — the Detalle (description) distinguishes multiple templates with the same category, wallet and frequency
 
 ### 7.3 Automation
 - On app load, client calls `generate_recurring_transactions()` RPC
