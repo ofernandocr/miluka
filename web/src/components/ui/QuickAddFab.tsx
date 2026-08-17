@@ -19,7 +19,7 @@ export function QuickAddFab({ quickCategories, onQuickAdd, onFullForm }: QuickAd
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-30 backdrop-blur-md bg-black/20"
+            className="fixed inset-0 z-30 backdrop-blur-[2px] bg-black/10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -57,40 +57,38 @@ export function QuickAddFab({ quickCategories, onQuickAdd, onFullForm }: QuickAd
                 </span>
               </motion.button>
             ))}
+
+            <motion.button
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              transition={{ delay: quickCategories.length * 0.04 }}
+              onClick={() => {
+                onFullForm()
+                close()
+              }}
+              aria-label="New Transaction"
+              className="flex h-14 items-center gap-3"
+            >
+              <span className="text-sm font-medium text-foreground pr-1">
+                New
+              </span>
+              <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full text-2xl shadow-float transition-transform hover:scale-110 active:scale-95 border-2 bg-primary/20 border-primary">
+                <Plus className="h-6 w-6 text-primary" />
+              </span>
+            </motion.button>
           </div>
         )}
       </AnimatePresence>
 
-      <motion.button
-        layout
-        onClick={() => {
-          if (open) {
-            close()
-            onFullForm()
-          } else {
-            setOpen(true)
-          }
-        }}
-        className="fixed bottom-20 right-4 z-40 flex h-14 items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground shadow-float hover:scale-105 hover:shadow-lg active:scale-95 lg:bottom-8"
-        transition={{ layout: { duration: 0.2 } }}
+      <button
+        onClick={() => setOpen(!open)}
+        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-float transition-all hover:scale-105 hover:shadow-lg active:scale-95 lg:bottom-8"
         aria-label="Add transaction"
         aria-expanded={open}
       >
-        <Plus className="h-6 w-6 flex-shrink-0" />
-        <AnimatePresence>
-          {open && (
-            <motion.span
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: "auto", opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="overflow-hidden whitespace-nowrap text-sm font-medium pr-3"
-            >
-              New
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </motion.button>
+        <Plus className="h-6 w-6" />
+      </button>
     </>
   )
 }
