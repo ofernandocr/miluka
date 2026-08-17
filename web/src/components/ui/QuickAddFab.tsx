@@ -19,7 +19,7 @@ export function QuickAddFab({ quickCategories, onQuickAdd, onFullForm }: QuickAd
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-30"
+            className="fixed inset-0 z-30 backdrop-blur-md bg-black/20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -43,19 +43,26 @@ export function QuickAddFab({ quickCategories, onQuickAdd, onFullForm }: QuickAd
                   onQuickAdd(cat)
                   close()
                 }}
-                title={cat.name}
                 aria-label={cat.name}
-                className="flex h-12 w-12 items-center justify-center rounded-full text-2xl shadow-float transition-transform hover:scale-110 active:scale-95"
-                style={{ backgroundColor: cat.color }}
+                className="flex h-14 items-center gap-3"
               >
-                {cat.icon}
+                <span className="text-sm font-medium text-foreground pr-1">
+                  {cat.name}
+                </span>
+                <span
+                  className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full text-2xl shadow-float transition-transform hover:scale-110 active:scale-95 border-2"
+                  style={{ backgroundColor: cat.color + "20", borderColor: cat.color }}
+                >
+                  {cat.icon}
+                </span>
               </motion.button>
             ))}
           </div>
         )}
       </AnimatePresence>
 
-      <button
+      <motion.button
+        layout
         onClick={() => {
           if (open) {
             close()
@@ -64,12 +71,26 @@ export function QuickAddFab({ quickCategories, onQuickAdd, onFullForm }: QuickAd
             setOpen(true)
           }
         }}
-        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-float transition-all hover:scale-105 hover:shadow-lg active:scale-95 lg:bottom-8"
+        className="fixed bottom-20 right-4 z-40 flex h-14 items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground shadow-float hover:scale-105 hover:shadow-lg active:scale-95 lg:bottom-8"
+        transition={{ layout: { duration: 0.2 } }}
         aria-label="Add transaction"
         aria-expanded={open}
       >
-        <Plus className="h-6 w-6" />
-      </button>
+        <Plus className="h-6 w-6 flex-shrink-0" />
+        <AnimatePresence>
+          {open && (
+            <motion.span
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: "auto", opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="overflow-hidden whitespace-nowrap text-sm font-medium pr-3"
+            >
+              New
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
     </>
   )
 }

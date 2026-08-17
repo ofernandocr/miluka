@@ -149,7 +149,7 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 ### Navigation
 - **Desktop (≥1024px):** Collapsible sidebar (240px expanded / 64px collapsed)
 - **Mobile (<1024px):** Bottom tab bar + floating action button (FAB)
-- FAB (`QuickAddFab`) expands vertically upward with an animated stack of circular category shortcuts (top 4 most-used expense categories, icon-only); a second tap on the FAB opens the full "New Transaction" form; available on all screen sizes
+- FAB (`QuickAddFab`) shows a `+` icon when closed; when tapped, expands to a pill showing `+ New` and deploys an animated vertical stack of category shortcuts (top 4 most-used expense categories); each shortcut shows the category name to the left and a tinted circle with the icon to the right; backdrop blurs the background while the menu is open; a second tap on the FAB opens the full "New Transaction" form; available on all screen sizes
 - Sidebar persists state in `localStorage`
 
 ### Animations
