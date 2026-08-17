@@ -38,7 +38,20 @@ function RecurringCard({ item, onEdit, onDelete, onToggleActive, onGenerateFromT
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <p className="truncate text-sm font-medium">{name}</p>
+            {item.description ? (
+              <>
+                <p className="truncate text-sm font-semibold" title={item.description}>
+                  {item.description}
+                </p>
+                <span className="truncate text-sm text-muted-foreground" title={name}>
+                  {name}
+                </span>
+              </>
+            ) : (
+              <>
+                <p className="truncate text-sm font-medium">{name}</p>
+              </>
+            )}
             {overdue && item.is_active && (
               <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-xs font-medium text-orange-500">
                 Due
