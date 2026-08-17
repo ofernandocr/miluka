@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Plus } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import type { Category } from "@/lib/types"
@@ -11,8 +11,54 @@ interface QuickAddFabProps {
 
 export function QuickAddFab({ quickCategories, onQuickAdd, onFullForm }: QuickAddFabProps) {
   const [open, setOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const previouslyFocused = useRef<HTMLElement | null>(null)
 
-  const close = () => setOpen(false)
+  const close = useCallback(() => {
+    setOpen(false)
+    previouslyFocused.current?.focus()
+  }, [])
+
+  // Escape key closes
+  useEffect(() => {
+    if (!open) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault()
+        close()
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [open, close])
+
+  // Focus trap + auto-focus first button
+  useEffect(() => {
+    if (!open || !menuRef.current) return
+    previouslyFocused.current = document.activeElement as HTMLElement
+
+    const buttons = menuRef.current.querySelectorAll<HTMLElement>("button[aria-label]")
+    if (buttons.length > 0) buttons[0]!.focus()
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab" || buttons.length === 0) return
+      const first = buttons[0]!
+      const last = buttons[buttons.length - 1]!
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+    document.addEventListener("keydown", handleTab)
+    return () => document.removeEventListener("keydown", handleTab)
+  }, [open])
 
   return (
     <>
@@ -31,7 +77,13 @@ export function QuickAddFab({ quickCategories, onQuickAdd, onFullForm }: QuickAd
 
       <AnimatePresence>
         {open && (
-          <div className="fixed bottom-36 right-4 z-30 flex flex-col items-end gap-3 lg:bottom-24">
+          <div
+            ref={menuRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Quick add transaction"
+            className="fixed bottom-36 right-4 z-30 flex flex-col items-end gap-3 lg:bottom-24"
+          >
             {quickCategories.map((cat, i) => (
               <motion.button
                 key={cat.id}

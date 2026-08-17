@@ -58,9 +58,10 @@ miluka/
         │   ├── layout/       # Sidebar, BottomNav, ProtectedRoute
         │   ├── ui/           # shadcn/ui primitives (button, card, dialog, ThemeToggle, FloatingActionButton)
         │   ├── budgets/      # BudgetForm, BudgetList
-        │   ├── recurring/    # RecurringForm, RecurringList, RecurringOverdueBanner
+        │   ├── recurring/    # RecurringForm, RecurringList, RecurringOverdueBanner, UpcomingRecurringSection
         │   ├── categories/   # CategoryList, CategoryForm
         │   ├── transactions/ # TransactionList, TransactionForm, TransactionItem, CsvImportDialog
+        │   ├── dashboard/    # TimeRangeToggle, WalletSummaryCards, SpendingByCategoryList
         │   ├── exports/      # ExportSection (CSV/JSON export)
         │   └── wallets/      # WalletList, WalletForm
         └── pages/            # Route pages (Login, Register, Dashboard, Transactions, Categories, Wallets, Budgets, Recurring, Settings)
@@ -130,6 +131,7 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 - Auth state shared via `AuthProvider` context (single subscription)
 - CRUD hooks (`useTransactions`, `useCategories`, `useWallets`, `useBudgets`, `useRecurringTransactions`) each manage their own state and refetch on mutation
 - `useQuickAdd` hook encapsulates the shared quick-add FAB + dialog pattern used by Dashboard and Transactions (category ranking, quick-add handler, recurring template handler)
+- `useRecurringTransactions` includes a `useRef` guard to prevent the auto-generate RPC from looping if the server fails to advance `next_due_date`
 - Data flows: Page → Hooks → Supabase client → Kong → PostgREST → PostgreSQL
 - Filtering (wallet, time range) done client-side via `useMemo` in the Dashboard component
   - `filterByTimeRange(transactions, timeRange)` — filters by current month
@@ -206,7 +208,7 @@ Transactions page supports URL-based filters via `useSearchParams`: `?category=<
 
 | Type | Tool | Location | Coverage |
 |------|------|----------|----------|
-| Unit (lib) | Vitest | `src/lib/__tests__/` | utils, quickAdd, recurring, csv (exportCsv, validateRows), dashboard (all functions including buildUnifiedCategories) |
+| Unit (lib) | Vitest | `src/lib/__tests__/` | utils (17), quickAdd (5), recurring (15), csv (13), dashboard (all functions including buildUnifiedCategories), budgets (19) |
 | Component | Vitest + RTL | `src/components/**/__tests__/` | TransactionForm (wizard flow, recurring checkbox, keyboard nav, error resilience), QuickAddDialog (validation, submit), TransactionList (grouping, interactions, empty state) |
 | Page (logic) | Vitest | `src/pages/__tests__/` | Dashboard pure functions (imported from lib/dashboard.ts) |
 

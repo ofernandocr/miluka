@@ -213,7 +213,7 @@ Let users define fixed recurring expenses (rent, subscriptions, utilities) that 
 - RecurringOverdueBanner: warns when templates are past due
 - Pause/resume toggle per template
 - "+" per template opens a confirmation dialog (GenerateConfirmDialog) to review/edit amount and date before generating
-- Main FAB (`QuickAddFab`) on Dashboard and Transactions shows a `+` icon when closed; when tapped, expands to a pill showing `+ New` and deploys an animated vertical stack of category shortcuts (top 4 most-used expense categories); each shortcut shows the category name to the left and a tinted circle with the icon to the right; backdrop blurs the background while the menu is open; a second tap on the FAB opens the full "New Transaction" form; selecting a category opens a minimal confirmation dialog requiring both amount and description
+- Main FAB (`QuickAddFab`) on Dashboard and Transactions shows a `+` icon when closed; when tapped, expands to a pill showing `+ New` and deploys an animated vertical stack of category shortcuts (top 4 most-used expense categories); each shortcut shows the category name to the left and a tinted circle with the icon to the right; backdrop blurs the background while the menu is open; a second tap on the FAB opens the full "New Transaction" form; selecting a category opens a minimal confirmation dialog requiring both amount and description; the menu has a focus trap (Tab cycles within buttons), Escape closes it, and `role="dialog"` + `aria-modal` ensure screen reader isolation
 
 ---
 

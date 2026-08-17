@@ -11,7 +11,7 @@ export function RecurringOverdueBanner({ recurring }: RecurringOverdueBannerProp
   if (count === 0) return null
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-sm">
+    <div role="status" className="flex items-center gap-3 rounded-lg border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-sm">
       <AlertTriangle className="h-4 w-4 flex-shrink-0 text-orange-500" />
       <p className="text-orange-500">
         You have {count} overdue recurring expense{count > 1 ? "s" : ""}.{" "}

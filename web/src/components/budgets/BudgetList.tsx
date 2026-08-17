@@ -60,6 +60,7 @@ function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & 
           aria-valuenow={Math.round(pct)}
           aria-valuemin={0}
           aria-valuemax={100}
+          aria-valuetext={`${formatCurrency(budget.spent, currency)} of ${formatCurrency(budget.amount, currency)} spent (${Math.round(pct)}%)`}
           aria-label={`${name} budget progress: ${Math.round(pct)}%`}
         >
           <div

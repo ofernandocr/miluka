@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { supabase } from "@/lib/supabase"
 import type { RecurringTransaction, NewRecurringTransaction } from "@/lib/types"
 
 export function useRecurringTransactions(userId: string | undefined) {
   const [recurring, setRecurring] = useState<RecurringTransaction[]>([])
   const [loading, setLoading] = useState(true)
+  const generateAttempted = useRef(false)
 
   const fetchRecurring = useCallback(async () => {
     if (!userId) return
@@ -19,18 +20,20 @@ export function useRecurringTransactions(userId: string | undefined) {
   }, [userId])
 
   useEffect(() => {
+    generateAttempted.current = false
     fetchRecurring()
   }, [fetchRecurring])
 
-  // Auto-generate overdue transactions on load
+  // Auto-generate overdue transactions on load (runs once per mount)
   useEffect(() => {
-    if (!userId || recurring.length === 0) return
+    if (!userId || recurring.length === 0 || generateAttempted.current) return
 
     const hasDue = recurring.some(
       (r) => r.is_active && new Date(r.next_due_date) <= new Date()
     )
 
     if (hasDue) {
+      generateAttempted.current = true
       supabase.rpc("generate_recurring_transactions").then(({ error }) => {
         if (!error) fetchRecurring()
       })

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { BarChart3, TrendingUp, TrendingDown, Wallet } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 import { motion } from "motion/react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
@@ -9,7 +9,6 @@ import { useWallets } from "@/hooks/useWallets"
 import { useBudgets } from "@/hooks/useBudgets"
 import { useRecurringTransactions } from "@/hooks/useRecurringTransactions"
 import { useQuickAdd } from "@/hooks/useQuickAdd"
-import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -24,10 +23,13 @@ import { EmptyState } from "@/components/ui/EmptyState"
 import { QuickAddFab } from "@/components/ui/QuickAddFab"
 import { QuickAddDialog } from "@/components/ui/QuickAddDialog"
 import { UpcomingRecurringSection } from "@/components/recurring/UpcomingRecurringSection"
+import { TimeRangeToggle } from "@/components/dashboard/TimeRangeToggle"
+import { WalletSummaryCards } from "@/components/dashboard/WalletSummaryCards"
+import { SpendingByCategoryList } from "@/components/dashboard/SpendingByCategoryList"
 import { computeBudgetSpent } from "@/lib/budgets"
 import { filterByTimeRange, buildUnifiedCategories, computeWalletSummaries } from "@/lib/dashboard"
 import { getUpcomingRecurring } from "@/lib/recurring"
-import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
+import { getCurrencySymbol } from "@/lib/utils"
 
 import type { NewTransaction, Budget } from "@/lib/types"
 import type { TimeRange } from "@/lib/dashboard"
@@ -130,24 +132,7 @@ export default function Dashboard() {
             </Select>
           )}
 
-          <div className="flex rounded-lg border p-0.5">
-            <Button
-              variant={timeRange === "month" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setTimeRange("month")}
-              className="rounded-md px-3"
-            >
-              This month
-            </Button>
-            <Button
-              variant={timeRange === "all" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setTimeRange("all")}
-              className="rounded-md px-3"
-            >
-              All time
-            </Button>
-          </div>
+          <TimeRangeToggle value={timeRange} onChange={setTimeRange} />
         </div>
       </div>
 
@@ -162,7 +147,6 @@ export default function Dashboard() {
       <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
         {visibleSummaries.map((summary) => {
           const totalExpense = summary.categoryData.reduce((s, c) => s + c.value, 0)
-          const balance = summary.income - summary.expense
           const budgetsForWallet = walletBudgets.get(summary.wallet.id) ?? []
           const unified = buildUnifiedCategories(summary.categoryData, budgetsForWallet, totalExpense)
 
@@ -186,134 +170,17 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Bento Summary Cards */}
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 transition-all hover:shadow-elevated dark:from-emerald-950/40 dark:to-emerald-900/20">
-                  <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
-                    <TrendingUp className="h-16 w-16 text-emerald-500 dark:text-emerald-400" />
-                  </div>
-                  <div className="relative">
-                    <p className="text-xs font-medium uppercase tracking-wide text-emerald-700/70 dark:text-emerald-400/70">Income</p>
-                    <p className="mt-1 text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
-                      {formatCurrency(summary.income, summary.wallet.currency)}
-                    </p>
-                  </div>
-                </div>
-                <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-rose-50 to-rose-100/50 p-4 transition-all hover:shadow-elevated dark:from-rose-950/40 dark:to-rose-900/20">
-                  <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
-                    <TrendingDown className="h-16 w-16 text-rose-500 dark:text-rose-400" />
-                  </div>
-                  <div className="relative">
-                    <p className="text-xs font-medium uppercase tracking-wide text-rose-700/70 dark:text-rose-400/70">Expenses</p>
-                    <p className="mt-1 text-2xl font-bold tabular-nums text-rose-700 dark:text-rose-300">
-                      {formatCurrency(summary.expense, summary.wallet.currency)}
-                    </p>
-                  </div>
-                </div>
-                <div className={`relative overflow-hidden rounded-2xl border p-4 transition-all hover:shadow-elevated ${
-                  balance >= 0
-                    ? "bg-gradient-to-br from-sky-50 to-sky-100/50 dark:from-sky-950/40 dark:to-sky-900/20"
-                    : "bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/40 dark:to-amber-900/20"
-                }`}>
-                  <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
-                    <Wallet className={`h-16 w-16 ${
-                      balance >= 0
-                        ? "text-sky-500 dark:text-sky-400"
-                        : "text-amber-500 dark:text-amber-400"
-                    }`} />
-                  </div>
-                  <div className="relative">
-                    <p className={`text-xs font-medium uppercase tracking-wide ${
-                      balance >= 0 ? "text-sky-700/70 dark:text-sky-400/70" : "text-amber-700/70 dark:text-amber-400/70"
-                    }`}>Balance</p>
-                    <p className={`mt-1 text-2xl font-bold tabular-nums ${
-                      balance >= 0 ? "text-sky-700 dark:text-sky-300" : "text-amber-700 dark:text-amber-300"
-                    }`}>
-                      {formatCurrency(balance, summary.wallet.currency)}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <WalletSummaryCards
+                income={summary.income}
+                expense={summary.expense}
+                currency={summary.wallet.currency}
+              />
 
-              {/* Spending by Category */}
               {unified.length > 0 ? (
-                <div className="rounded-2xl border bg-card p-4 transition-shadow hover:shadow-elevated">
-                  <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Spending by Category</h3>
-                  <motion.div
-                    className="space-y-2"
-                    variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } }}
-                    initial="hidden"
-                    animate="show"
-                  >
-                    {(() => {
-                      const maxSpent = Math.max(...unified.map((c) => c.spent), 1)
-                      return unified.map((cat) => {
-                        const hasBudget = cat.budgetAmount !== null
-                        const barPct = hasBudget ? cat.budgetPct! : 0
-                        const remaining = hasBudget ? cat.budgetAmount! - cat.spent : 0
-                        const isOverspent = hasBudget && barPct > 100
-
-                        const barWidth = hasBudget
-                          ? `${Math.min(barPct, 100)}%`
-                          : `${(cat.spent / maxSpent) * 100}%`
-
-                        const barBg = hasBudget
-                          ? isOverspent ? "#ef4444"
-                            : barPct > 85 ? "#f97316"
-                            : barPct > 60 ? "#eab308"
-                            : "hsl(var(--primary))"
-                          : cat.color
-
-                        const subtitle = hasBudget
-                          ? isOverspent
-                            ? `$${Math.abs(remaining).toLocaleString("en-US")} overspent`
-                            : `$${remaining.toLocaleString("en-US")} left to spend`
-                          : null
-
-                        return (
-                          <motion.button
-                            key={cat.id}
-                            variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}
-                            onClick={() => handleCategoryClick(cat.id)}
-                            className="group flex w-full items-center gap-3 rounded-xl bg-secondary/50 p-3 text-left transition-colors hover:bg-secondary/80"
-                          >
-                            {/* Icon */}
-                            <div
-                              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg"
-                              style={{ backgroundColor: cat.color + "20" }}
-                            >
-                              <span role="img" aria-label={cat.name}>{cat.icon}</span>
-                            </div>
-
-                            {/* Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between">
-                                <p className="truncate text-sm font-medium">{cat.name}</p>
-                                <span className="ml-2 shrink-0 text-sm font-bold tabular-nums text-foreground">
-                                  ${cat.spent.toLocaleString("en-US")}
-                                </span>
-                              </div>
-                              <p className={`text-xs ${isOverspent ? "text-red-500" : "text-muted-foreground"}`}>
-                                {subtitle || `${cat.pctOfTotal.toFixed(0)}%`}
-                              </p>
-
-                              {/* Progress bar */}
-                              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-secondary">
-                                <motion.div
-                                  className="h-full rounded-full"
-                                  style={{ backgroundColor: barBg }}
-                                  initial={{ width: 0 }}
-                                  animate={{ width: barWidth }}
-                                  transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" as const }}
-                                />
-                              </div>
-                            </div>
-                          </motion.button>
-                        )
-                      })
-                    })()}
-                  </motion.div>
-                </div>
+                <SpendingByCategoryList
+                  unified={unified}
+                  onCategoryClick={handleCategoryClick}
+                />
               ) : (
                 <div className="rounded-2xl border bg-card py-8 text-center text-sm text-muted-foreground">
                   No expenses in this wallet for the selected period.
