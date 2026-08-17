@@ -45,6 +45,8 @@ Add `wallet_id` to the existing `transactions` table:
 - Add wallet selector (dropdown) with the default wallet pre-selected
 - If user has only one wallet, selector is hidden
 - Currency indicator shown next to the amount field (e.g. "$" or "MX$")
+- Create mode (wizard) shows an optional "🔁 Make this a recurring template" checkbox inline on the final Date step; when enabled it reveals a frequency selector (Weekly/Monthly/Quarterly/Yearly) and a day-of-month selector (hidden for Weekly); on submit it creates both the transaction and a recurring template seeded from the same amount, type, description, category and wallet
+- The recurring checkbox appears only in create mode and only when the page provides the `onCreateRecurring` callback; edit mode uses the classic form unchanged
 
 ### 2.3 Voice Input (future phase)
 - Microphone button on transaction form
@@ -196,6 +198,7 @@ Let users define fixed recurring expenses (rent, subscriptions, utilities) that 
 | updated_at      | timestamptz   | auto-updated via trigger                 |
 
 - Unique constraint: one template per user/category/wallet/description/frequency — the Detalle (description) distinguishes multiple templates with the same category, wallet and frequency
+- Recurring templates can also be created inline from the New Transaction wizard (final Date step, optional checkbox), seeding the template from the transaction's amount, type, description, category and wallet
 
 ### 7.3 Automation
 - On app load, client calls `generate_recurring_transactions()` RPC

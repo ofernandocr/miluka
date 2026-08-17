@@ -11,8 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { FormActions } from "@/components/ui/FormActions"
-import type { Category, NewTransaction, Transaction, Wallet } from "@/lib/types"
+import type { Category, NewTransaction, NewRecurringTransaction, RecurringFrequency, Transaction, Wallet } from "@/lib/types"
 import { getCurrencySymbol } from "@/lib/utils"
+import { getFrequencyLabel } from "@/lib/recurring"
 
 interface TransactionFormProps {
   categories: Category[]
@@ -20,11 +21,14 @@ interface TransactionFormProps {
   initialData?: Transaction
   onSubmit: (data: NewTransaction) => Promise<void>
   onCancel: () => void
+  onCreateRecurring?: (template: NewRecurringTransaction) => Promise<void>
 }
 
 type TxType = "expense" | "income"
 
-export function TransactionForm({ categories, wallets, initialData, onSubmit, onCancel }: TransactionFormProps) {
+const FREQUENCIES: RecurringFrequency[] = ["monthly", "weekly", "quarterly", "yearly"]
+
+export function TransactionForm({ categories, wallets, initialData, onSubmit, onCancel, onCreateRecurring }: TransactionFormProps) {
   const isEdit = !!initialData
 
   const [type, setType] = useState<TxType>(initialData?.type ?? "expense")
@@ -36,6 +40,11 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
   const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
   const [date, setDate] = useState(initialData?.date ?? localDate)
   const [submitting, setSubmitting] = useState(false)
+
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [frequency, setFrequency] = useState<RecurringFrequency>("monthly")
+  const [dayOfMonth, setDayOfMonth] = useState(() => Math.min(new Date().getDate(), 28))
+  const showDayOfMonth = frequency !== "weekly"
 
   const amountRef = useRef<HTMLInputElement>(null)
   const descRef = useRef<HTMLInputElement>(null)
@@ -85,6 +94,21 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
         wallet_id: walletId || null,
         date,
       })
+      if (isRecurring && onCreateRecurring) {
+        try {
+          await onCreateRecurring({
+            type,
+            amount: Number(amount),
+            description: description || null,
+            category_id: categoryId,
+            wallet_id: walletId || null,
+            frequency,
+            day_of_month: showDayOfMonth ? dayOfMonth : null,
+          })
+        } catch {
+          // Transaction already saved; recurring error is surfaced by the caller
+        }
+      }
     } finally {
       setSubmitting(false)
     }
@@ -300,6 +324,68 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
     </div>
   )
 
+  const recurringField = () => (
+    <div className="space-y-3 rounded-lg border p-3">
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={isRecurring}
+        onClick={() => setIsRecurring((v) => !v)}
+        className="flex w-full items-center gap-3 text-left"
+      >
+        <span
+          className={`flex h-5 w-5 items-center justify-center rounded border-2 text-xs ${
+            isRecurring ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground"
+          }`}
+        >
+          {isRecurring ? "✓" : ""}
+        </span>
+        <span className="text-sm font-medium">🔁 Make this a recurring template</span>
+      </button>
+
+      {isRecurring && (
+        <div className="space-y-3 pl-1">
+          <div className="space-y-2">
+            <Label>Frequency</Label>
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Frequency">
+              {FREQUENCIES.map((freq) => (
+                <Button
+                  key={freq}
+                  type="button"
+                  variant={frequency === freq ? "default" : "outline"}
+                  size="sm"
+                  role="radio"
+                  aria-checked={frequency === freq}
+                  onClick={() => setFrequency(freq)}
+                >
+                  {getFrequencyLabel(freq)}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {showDayOfMonth && (
+            <div className="space-y-2">
+              <Label>Day of Month</Label>
+              <Select value={String(dayOfMonth)} onValueChange={(v) => setDayOfMonth(Number(v))}>
+                <SelectTrigger aria-label="Select day of month">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+                    <SelectItem key={d} value={String(d)}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
   // ── Edit mode: classic form ──
   if (isEdit) {
     return (
@@ -338,6 +424,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
       {step === CATEGORY_STEP && categoryGridButtons()}
       {step === DESC_STEP && descriptionField(true)}
       {step === DATE_STEP && dateField(true)}
+      {step === DATE_STEP && onCreateRecurring && recurringField()}
 
       {/* Navigation */}
       <div className="flex items-center justify-between pt-2">

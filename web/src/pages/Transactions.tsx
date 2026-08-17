@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
 import { useWallets } from "@/hooks/useWallets"
+import { useRecurringTransactions } from "@/hooks/useRecurringTransactions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { TransactionList } from "@/components/transactions/TransactionList"
@@ -22,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { getTopExpenseCategories } from "@/lib/quickAdd"
-import type { NewTransaction, Category } from "@/lib/types"
+import type { NewTransaction, NewRecurringTransaction, Category } from "@/lib/types"
 
 export default function Transactions() {
   const { user } = useAuth()
@@ -30,6 +31,7 @@ export default function Transactions() {
     useTransactions(user?.id)
   const { categories } = useCategories(user?.id)
   const { wallets } = useWallets(user?.id)
+  const { createRecurring } = useRecurringTransactions(user?.id)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -91,6 +93,14 @@ export default function Transactions() {
   const handleCreate = async (data: NewTransaction) => {
     await createTransaction(data)
     setDialogOpen(false)
+  }
+
+  const handleCreateRecurring = async (template: NewRecurringTransaction) => {
+    try {
+      await createRecurring(template)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not create recurring template")
+    }
   }
 
   const handleQuickAdd = async (amount: number, description: string) => {
@@ -249,6 +259,7 @@ export default function Transactions() {
             initialData={currentTx}
             onSubmit={editingTransaction ? handleUpdate : handleCreate}
             onCancel={() => { setDialogOpen(false); setEditingTransaction(null) }}
+            onCreateRecurring={editingTransaction ? undefined : handleCreateRecurring}
           />
         </DialogContent>
       </Dialog>
