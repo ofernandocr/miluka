@@ -111,6 +111,13 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 - PostgREST connects as `authenticator`, switches to `authenticated` role
 - RLS uses `auth.uid()` from JWT `sub` claim via `request.jwt.claims` GUC
 
+### Client-side Auth (`src/providers/AuthProvider.tsx`)
+
+- `AuthProvider` wraps the entire app (in `App.tsx`) and creates a single `onAuthStateChange` listener
+- All components consume auth via the `useAuth()` hook (re-exported from `src/hooks/useAuth.ts`) which reads from `AuthContext`
+- This eliminates duplicate auth subscriptions that previously occurred when `useAuth()` was called independently in every page and layout component
+- Login/Register pages use the same `useAuth()` but operate outside `ProtectedRoute`
+
 ## API Access
 
 - `Authorization: Bearer <jwt>` — authenticated user
@@ -120,7 +127,9 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 ## State Management
 
 - No global state store (Redux, Zustand, etc.)
-- Each page uses hooks directly (useAuth, useTransactions, useCategories, useWallets)
+- Auth state shared via `AuthProvider` context (single subscription)
+- CRUD hooks (`useTransactions`, `useCategories`, `useWallets`, `useBudgets`, `useRecurringTransactions`) each manage their own state and refetch on mutation
+- `useQuickAdd` hook encapsulates the shared quick-add FAB + dialog pattern used by Dashboard and Transactions (category ranking, quick-add handler, recurring template handler)
 - Data flows: Page → Hooks → Supabase client → Kong → PostgREST → PostgreSQL
 - Filtering (wallet, time range) done client-side via `useMemo` in the Dashboard component
   - `filterByTimeRange(transactions, timeRange)` — filters by current month
@@ -195,11 +204,11 @@ Transactions page supports URL-based filters via `useSearchParams`: `?category=<
 
 ## Testing
 
-| Type | Tool | Location | Target |
-|------|------|----------|--------|
-| Component | Vitest + RTL | `src/__tests__/` | Rendering, interactions, edge cases |
-| Hook | Vitest | `src/__tests__/` | All states (loading, empty, error, populated) |
-| Integration | Vitest + test-db container | `src/__tests__/` | Real PostgreSQL queries |
+| Type | Tool | Location | Coverage |
+|------|------|----------|----------|
+| Unit (lib) | Vitest | `src/lib/__tests__/` | utils, quickAdd, recurring, csv (exportCsv, validateRows), dashboard (all functions including buildUnifiedCategories) |
+| Component | Vitest + RTL | `src/components/**/__tests__/` | TransactionForm (wizard flow, recurring checkbox, keyboard nav, error resilience), QuickAddDialog (validation, submit), TransactionList (grouping, interactions, empty state) |
+| Page (logic) | Vitest | `src/pages/__tests__/` | Dashboard pure functions (imported from lib/dashboard.ts) |
 
 ## Deployment Architecture
 
