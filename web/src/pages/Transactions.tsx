@@ -72,14 +72,14 @@ export default function Transactions() {
 
   const setCategoryFilter = (value: string) => {
     const params = new URLSearchParams(searchParams)
-    if (value) params.set("category", value)
+    if (value && value !== "all") params.set("category", value)
     else params.delete("category")
     setSearchParams(params)
   }
 
   const setTypeFilter = (value: string) => {
     const params = new URLSearchParams(searchParams)
-    if (value) params.set("type", value)
+    if (value && value !== "all") params.set("type", value)
     else params.delete("type")
     setSearchParams(params)
   }

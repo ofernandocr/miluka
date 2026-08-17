@@ -1,17 +1,9 @@
 import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { BarChart3, Wallet, Tags, Landmark, Receipt, Repeat, Settings, PiggyBank, ChevronLeft, LogOut } from "lucide-react"
+import { Settings, PiggyBank, ChevronLeft, LogOut } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
+import { MAIN_NAV_ITEMS } from "@/config/navigation"
 import { cn } from "@/lib/utils"
-
-const navItems = [
-  { to: "/", icon: BarChart3, label: "Dashboard" },
-  { to: "/transactions", icon: Wallet, label: "Transactions" },
-  { to: "/categories", icon: Tags, label: "Categories" },
-  { to: "/wallets", icon: Landmark, label: "Wallets" },
-  { to: "/budgets", icon: Receipt, label: "Budgets" },
-  { to: "/recurring", icon: Repeat, label: "Recurring" },
-] as const
 
 export function Sidebar() {
   const { pathname } = useLocation()
@@ -43,12 +35,13 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-2 py-3">
-        {navItems.map(({ to, icon: Icon, label }) => {
+        {MAIN_NAV_ITEMS.map(({ to, icon: Icon, label }) => {
           const active = pathname === to
           return (
             <Link
               key={to}
               to={to}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 active
@@ -88,7 +81,7 @@ export function Sidebar() {
               {user?.email?.charAt(0).toUpperCase()}
             </div>
             <span className="flex-1 truncate text-xs text-sidebar-foreground/70">{user?.email}</span>
-            <button onClick={signOut} className="text-sidebar-foreground/50 hover:text-sidebar-foreground" title="Sign out">
+            <button onClick={signOut} className="text-sidebar-foreground/50 hover:text-sidebar-foreground" title="Sign out" aria-label="Sign out">
               <LogOut className="h-4 w-4" />
             </button>
           </div>
@@ -98,6 +91,7 @@ export function Sidebar() {
           onClick={toggleCollapse}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/50 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           <ChevronLeft className={cn("h-4 w-4 shrink-0 transition-transform", collapsed && "rotate-180")} />
           {!collapsed && <span>Collapse</span>}
