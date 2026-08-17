@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Toaster } from "sonner"
+import { AuthProvider } from "@/providers/AuthProvider"
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { BottomNav } from "@/components/layout/BottomNav"
@@ -20,10 +21,11 @@ const Settings = lazy(() => import("@/pages/Settings"))
 export default function App() {
   return (
     <BrowserRouter>
-      <Toaster position="top-center" richColors />
-      <ErrorBoundary>
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
+      <AuthProvider>
+        <Toaster position="top-center" richColors />
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
@@ -50,7 +52,8 @@ export default function App() {
             />
           </Routes>
         </Suspense>
-      </ErrorBoundary>
+        </ErrorBoundary>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

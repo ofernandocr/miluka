@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { toast } from "sonner"
 import { BarChart3, TrendingUp, TrendingDown, Wallet } from "lucide-react"
 import { motion } from "motion/react"
 import { useAuth } from "@/hooks/useAuth"
@@ -9,6 +8,7 @@ import { useCategories } from "@/hooks/useCategories"
 import { useWallets } from "@/hooks/useWallets"
 import { useBudgets } from "@/hooks/useBudgets"
 import { useRecurringTransactions } from "@/hooks/useRecurringTransactions"
+import { useQuickAdd } from "@/hooks/useQuickAdd"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -26,11 +26,10 @@ import { QuickAddDialog } from "@/components/ui/QuickAddDialog"
 import { UpcomingRecurringSection } from "@/components/recurring/UpcomingRecurringSection"
 import { computeBudgetSpent } from "@/lib/budgets"
 import { filterByTimeRange, buildUnifiedCategories, computeWalletSummaries } from "@/lib/dashboard"
-import { getTopExpenseCategories } from "@/lib/quickAdd"
 import { getUpcomingRecurring } from "@/lib/recurring"
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
 
-import type { NewTransaction, NewRecurringTransaction, Budget, Category } from "@/lib/types"
+import type { NewTransaction, Budget } from "@/lib/types"
 import type { TimeRange } from "@/lib/dashboard"
 
 const stagger = {
@@ -55,12 +54,14 @@ export default function Dashboard() {
   const [selectedWalletId, setSelectedWalletId] = useState<string>("all")
   const [timeRange, setTimeRange] = useState<TimeRange>("month")
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [quickCategory, setQuickCategory] = useState<Category | null>(null)
 
-  const topCategories = useMemo(
-    () => getTopExpenseCategories(transactions, categories),
-    [transactions, categories]
-  )
+  const { quickCategory, setQuickCategory, topCategories, handleQuickAdd, handleCreateRecurring } = useQuickAdd({
+    transactions,
+    categories,
+    wallets,
+    createTransaction,
+    createRecurring,
+  })
 
   const upcomingRecurring = useMemo(
     () => getUpcomingRecurring(recurringTemplates, 3),
@@ -101,35 +102,6 @@ export default function Dashboard() {
   const handleCreate = async (data: NewTransaction) => {
     await createTransaction(data)
     setDialogOpen(false)
-  }
-
-  const handleCreateRecurring = async (template: NewRecurringTransaction) => {
-    try {
-      await createRecurring(template)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create recurring template")
-    }
-  }
-
-  const handleQuickAdd = async (amount: number, description: string) => {
-    if (!quickCategory) return
-    const walletId = wallets[0]?.id ?? null
-    const today = new Date()
-    const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
-    try {
-      await createTransaction({
-        type: "expense",
-        amount,
-        description,
-        category_id: quickCategory.id,
-        wallet_id: walletId,
-        date: localDate,
-      })
-      setQuickCategory(null)
-      toast.success("Transaction added")
-    } catch {
-      toast.error("Failed to add transaction")
-    }
   }
 
   if (loading) {

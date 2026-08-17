@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
-import { toast } from "sonner"
 import { Filter, X, Search } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
 import { useWallets } from "@/hooks/useWallets"
 import { useRecurringTransactions } from "@/hooks/useRecurringTransactions"
+import { useQuickAdd } from "@/hooks/useQuickAdd"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { TransactionList } from "@/components/transactions/TransactionList"
@@ -22,8 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { getTopExpenseCategories } from "@/lib/quickAdd"
-import type { NewTransaction, NewRecurringTransaction, Category } from "@/lib/types"
+import type { NewTransaction } from "@/lib/types"
 
 export default function Transactions() {
   const { user } = useAuth()
@@ -36,12 +35,14 @@ export default function Transactions() {
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<string | null>(null)
-  const [quickCategory, setQuickCategory] = useState<Category | null>(null)
 
-  const topCategories = useMemo(
-    () => getTopExpenseCategories(transactions, categories),
-    [transactions, categories]
-  )
+  const { quickCategory, setQuickCategory, topCategories, handleQuickAdd, handleCreateRecurring } = useQuickAdd({
+    transactions,
+    categories,
+    wallets,
+    createTransaction,
+    createRecurring,
+  })
 
   const categoryFilter = searchParams.get("category") ?? ""
   const typeFilter = searchParams.get("type") ?? ""
@@ -93,35 +94,6 @@ export default function Transactions() {
   const handleCreate = async (data: NewTransaction) => {
     await createTransaction(data)
     setDialogOpen(false)
-  }
-
-  const handleCreateRecurring = async (template: NewRecurringTransaction) => {
-    try {
-      await createRecurring(template)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create recurring template")
-    }
-  }
-
-  const handleQuickAdd = async (amount: number, description: string) => {
-    if (!quickCategory) return
-    const walletId = wallets[0]?.id ?? null
-    const today = new Date()
-    const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
-    try {
-      await createTransaction({
-        type: "expense",
-        amount,
-        description,
-        category_id: quickCategory.id,
-        wallet_id: walletId,
-        date: localDate,
-      })
-      setQuickCategory(null)
-      toast.success("Transaction added")
-    } catch {
-      toast.error("Failed to add transaction")
-    }
   }
 
   const handleUpdate = async (data: NewTransaction) => {

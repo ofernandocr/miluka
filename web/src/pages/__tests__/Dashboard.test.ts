@@ -1,83 +1,13 @@
 import { describe, it, expect } from "vitest"
-import type { Transaction, Wallet } from "@/lib/types"
-
-type TimeRange = "month" | "all"
-
-function isInCurrentMonth(dateStr: string): boolean {
-  const d = new Date(dateStr)
-  const now = new Date()
-  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-}
-
-function filterByTimeRange(transactions: Transaction[], timeRange: TimeRange): Transaction[] {
-  if (timeRange === "all") return transactions
-  return transactions.filter((t) => isInCurrentMonth(t.date))
-}
-
-interface CategoryDataItem {
-  id: string
-  name: string
-  icon: string
-  value: number
-  color: string
-}
-
-function computeCategoryData(transactions: Transaction[]): CategoryDataItem[] {
-  const byCategory: Record<string, CategoryDataItem> = {}
-  for (const t of transactions) {
-    if (t.type !== "expense") continue
-    const id = t.category_id
-    if (!byCategory[id]) {
-      byCategory[id] = {
-        id,
-        name: t.category?.name ?? "Uncategorized",
-        icon: t.category?.icon ?? "📦",
-        value: 0,
-        color: t.category?.color ?? "#6b7280",
-      }
-    }
-    byCategory[id].value += Number(t.amount)
-  }
-  return Object.values(byCategory).sort((a, b) => b.value - a.value)
-}
-
-interface WalletSummary {
-  wallet: Wallet
-  income: number
-  expense: number
-  categoryData: CategoryDataItem[]
-}
-
-function computeWalletSummaries(
-  transactions: Transaction[],
-  wallets: Wallet[]
-): WalletSummary[] {
-  const walletMap = new Map(wallets.map((w) => [w.id, w]))
-  const txByWallet = new Map<string, Transaction[]>()
-
-  for (const t of transactions) {
-    const key = t.wallet_id ?? "__none__"
-    if (!txByWallet.has(key)) txByWallet.set(key, [])
-    txByWallet.get(key)!.push(t)
-  }
-
-  const result: WalletSummary[] = []
-  for (const [key, txs] of txByWallet) {
-    const wallet = key === "__none__" ? null : walletMap.get(key)
-    if (!wallet) continue
-    const income = txs
-      .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + Number(t.amount), 0)
-    const expense = txs
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + Number(t.amount), 0)
-    const categoryData = computeCategoryData(txs)
-    result.push({ wallet, income, expense, categoryData })
-  }
-
-  result.sort((a, b) => a.wallet.name.localeCompare(b.wallet.name))
-  return result
-}
+import {
+  isInCurrentMonth,
+  filterByTimeRange,
+  computeCategoryData,
+  computeWalletSummaries,
+  buildUnifiedCategories,
+  type CategoryDataItem,
+} from "@/lib/dashboard"
+import type { Transaction, Wallet, Budget } from "@/lib/types"
 
 const now = new Date()
 const currentMonth = String(now.getMonth() + 1).padStart(2, "0")
@@ -88,7 +18,7 @@ const mockWallets: Wallet[] = [
   { id: "w2", user_id: "user-1", name: "Savings", currency: "USD", icon: "🏦", color: "#3b82f6", created_at: "2026-01-01T00:00:00Z" },
 ]
 
-function makeTx(overrides: Partial<Transaction> & { date?: string }): Transaction {
+function makeTx(overrides: Partial<Transaction> & { date?: string } = {}): Transaction {
   return {
     id: "t-" + Math.random(),
     user_id: "user-1",
@@ -96,7 +26,7 @@ function makeTx(overrides: Partial<Transaction> & { date?: string }): Transactio
     wallet_id: "w1",
     amount: 100,
     description: "Test",
-    date: "2026-07-26T12:00:00",
+    date: `${currentYear}-${currentMonth}-15`,
     type: "expense",
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
@@ -107,21 +37,19 @@ function makeTx(overrides: Partial<Transaction> & { date?: string }): Transactio
 
 describe("isInCurrentMonth", () => {
   it("returns true for a date in the current month", () => {
-    const dateStr = `${currentYear}-${currentMonth}-15T12:00:00`
-    expect(isInCurrentMonth(dateStr)).toBe(true)
+    expect(isInCurrentMonth(`${currentYear}-${currentMonth}-15`)).toBe(true)
   })
 
   it("returns false for a date in a different month", () => {
     const otherMonth = currentMonth === "01" ? "12" : "01"
     const otherYear = currentMonth === "01" ? currentYear - 1 : currentYear
-    const dateStr = `${otherYear}-${otherMonth}-15T12:00:00`
-    expect(isInCurrentMonth(dateStr)).toBe(false)
+    expect(isInCurrentMonth(`${otherYear}-${otherMonth}-15`)).toBe(false)
   })
 })
 
 describe("filterByTimeRange", () => {
-  const currentMonthTx = makeTx({ date: `${currentYear}-${currentMonth}-10T12:00:00` })
-  const lastYearTx = makeTx({ date: "2025-01-15T12:00:00" })
+  const currentMonthTx = makeTx({ date: `${currentYear}-${currentMonth}-10` })
+  const lastYearTx = makeTx({ date: "2025-01-15" })
   const transactions = [currentMonthTx, lastYearTx]
 
   it("returns all transactions when timeRange is 'all'", () => {
@@ -206,5 +134,44 @@ describe("computeWalletSummaries", () => {
     const general = result.find((r) => r.wallet.name === "General")!
     expect(general.income).toBe(500)
     expect(general.expense).toBe(300)
+  })
+})
+
+describe("buildUnifiedCategories", () => {
+  const categoryData: CategoryDataItem[] = [
+    { id: "c1", name: "Food", icon: "🍔", value: 300, color: "#ef4444" },
+    { id: "c2", name: "Transport", icon: "🚌", value: 100, color: "#3b82f6" },
+  ]
+
+  const mockBudgets: { budget: Budget; spent: number }[] = [
+    {
+      budget: { id: "b1", user_id: "u1", amount: 500, category_id: "c1", wallet_id: "w1", start_date: null, end_date: null, created_at: "2026-01-01T00:00:00Z" },
+      spent: 300,
+    },
+  ]
+
+  it("merges category data with budget data", () => {
+    const result = buildUnifiedCategories(categoryData, mockBudgets, 400)
+    expect(result).toHaveLength(2)
+    const food = result.find((r) => r.id === "c1")!
+    expect(food.budgetAmount).toBe(500)
+    expect(food.budgetPct).toBe(60)
+    expect(food.pctOfTotal).toBe(75)
+  })
+
+  it("sets null budget for categories without budget", () => {
+    const result = buildUnifiedCategories(categoryData, mockBudgets, 400)
+    const transport = result.find((r) => r.id === "c2")!
+    expect(transport.budgetAmount).toBeNull()
+    expect(transport.budgetPct).toBeNull()
+  })
+
+  it("handles zero total expense", () => {
+    const result = buildUnifiedCategories(categoryData, [], 0)
+    expect(result[0]!.pctOfTotal).toBe(0)
+  })
+
+  it("returns empty array for empty categoryData", () => {
+    expect(buildUnifiedCategories([], [], 0)).toHaveLength(0)
   })
 })
