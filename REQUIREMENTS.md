@@ -109,6 +109,13 @@ Shows expense breakdown by category for the selected wallet(s) and time range. M
 - Hover/tap effects on all interactive elements
 - Monospace numbers (JetBrains Mono) for financial data
 
+### 4.6 Upcoming Recurring
+- Dashboard shows the 3 nearest active recurring templates ordered ascending by `next_due_date`; past-due active templates surface first with a "Due" badge
+- Rendered as a compact card (category icon, description as primary text, category name muted when a description exists, schedule subtitle, amount + next-due date) after the wallet summaries and before the QuickAddFAB
+- "View all →" link navigates to `/recurring`
+- Data loaded via `useRecurringTransactions` (same hook as /recurring); the auto-generation RPC (`generate_recurring_transactions()`) also runs on Dashboard load
+- Frontend-only; no schema change
+
 ---
 
 ## 5. Budgets

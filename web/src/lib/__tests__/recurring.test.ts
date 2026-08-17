@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { hasDuplicateRecurringTemplate } from "@/lib/recurring"
+import { hasDuplicateRecurringTemplate, getUpcomingRecurring } from "@/lib/recurring"
 import type { RecurringTransaction, NewRecurringTransaction } from "@/lib/types"
 
 const base: NewRecurringTransaction = {
@@ -70,5 +70,59 @@ describe("hasDuplicateRecurringTemplate", () => {
 
   it("returns false for an empty list", () => {
     expect(hasDuplicateRecurringTemplate([], base)).toBe(false)
+  })
+})
+
+describe("getUpcomingRecurring", () => {
+  it("returns up to the default limit (3) active templates sorted ascending by next_due_date", () => {
+    const recurring = [
+      makeRecurring({ id: "a", next_due_date: "2026-09-10" }),
+      makeRecurring({ id: "b", next_due_date: "2026-09-05" }),
+      makeRecurring({ id: "c", next_due_date: "2026-09-20" }),
+      makeRecurring({ id: "d", next_due_date: "2026-09-01" }),
+      makeRecurring({ id: "e", next_due_date: "2026-09-15" }),
+    ]
+    const result = getUpcomingRecurring(recurring)
+    expect(result).toHaveLength(3)
+    expect(result.map((r) => r.id)).toEqual(["d", "b", "a"])
+  })
+
+  it("respects the limit argument", () => {
+    const recurring = Array.from({ length: 5 }, (_, i) =>
+      makeRecurring({ id: `r${i}`, next_due_date: `2026-09-${String(i + 1).padStart(2, "0")}` })
+    )
+    expect(getUpcomingRecurring(recurring, 2)).toHaveLength(2)
+    expect(getUpcomingRecurring(recurring, 2).map((r) => r.id)).toEqual(["r0", "r1"])
+  })
+
+  it("excludes inactive (paused) templates", () => {
+    const recurring = [
+      makeRecurring({ id: "active", is_active: true, next_due_date: "2026-09-05" }),
+      makeRecurring({ id: "paused", is_active: false, next_due_date: "2026-09-01" }),
+    ]
+    const result = getUpcomingRecurring(recurring)
+    expect(result.map((r) => r.id)).toEqual(["active"])
+  })
+
+  it("includes past-due (overdue) active templates at the top", () => {
+    const recurring = [
+      makeRecurring({ id: "future", next_due_date: "2026-12-01" }),
+      makeRecurring({ id: "overdue", next_due_date: "2000-01-01" }),
+      makeRecurring({ id: "soon", next_due_date: "2026-09-05" }),
+    ]
+    const result = getUpcomingRecurring(recurring)
+    expect(result.map((r) => r.id)).toEqual(["overdue", "soon", "future"])
+  })
+
+  it("returns an empty array for an empty list", () => {
+    expect(getUpcomingRecurring([])).toEqual([])
+  })
+
+  it("returns an empty array when all templates are inactive", () => {
+    const recurring = [
+      makeRecurring({ id: "a", is_active: false, next_due_date: "2026-09-05" }),
+      makeRecurring({ id: "b", is_active: false, next_due_date: "2026-09-01" }),
+    ]
+    expect(getUpcomingRecurring(recurring)).toEqual([])
   })
 })

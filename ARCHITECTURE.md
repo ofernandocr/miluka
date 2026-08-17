@@ -126,6 +126,7 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
   - `filterByTimeRange(transactions, timeRange)` — filters by current month
   - `computeWalletSummaries(transactions, wallets)` — groups transactions per wallet, computes income/expense/categoryData per wallet
   - `computeCategoryData(transactions)` — aggregates expense amounts by category for a single wallet's transactions
+- Dashboard also loads recurring templates via `useRecurringTransactions` and renders `UpcomingRecurringSection` (top 3 active templates nearest to due date) after the wallet summaries; the auto-generation RPC (`generate_recurring_transactions()`) runs on Dashboard load too
 
 ## Design System
 
@@ -292,3 +293,4 @@ See `DEPLOY.md` for full deployment instructions.
 - "+" per template opens a confirmation dialog to review/edit the amount and date before generating
 - Top 4 most-used expense categories are surfaced as circular quick-add shortcuts (with name label) on the main FAB (Dashboard and Transactions pages); selecting one opens a minimal confirmation dialog that requires both amount and description
 - Duplicate prevention: the unique constraint includes the description, allowing multiple templates with the same category/wallet/frequency when the Detalle differs; the client pre-checks via `hasDuplicateRecurringTemplate` and falls back to a friendly toast on the 23505 error
+- Dashboard surfaces the top 3 active templates nearest to due date (including past-due) via `getUpcomingRecurring` in `lib/recurring.ts`, rendered in `UpcomingRecurringSection` between the wallet summaries and QuickAddFab

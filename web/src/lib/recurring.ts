@@ -69,6 +69,19 @@ export function getOverdueCount(recurring: RecurringTransaction[]): number {
   return recurring.filter((r) => r.is_active && isDueOrOverdue(r.next_due_date)).length
 }
 
+export function getUpcomingRecurring(
+  recurring: RecurringTransaction[],
+  limit = 3
+): RecurringTransaction[] {
+  return [...recurring]
+    .filter((r) => r.is_active)
+    .sort(
+      (a, b) =>
+        new Date(a.next_due_date).getTime() - new Date(b.next_due_date).getTime()
+    )
+    .slice(0, limit)
+}
+
 export function hasDuplicateRecurringTemplate(
   recurring: RecurringTransaction[],
   item: NewRecurringTransaction,

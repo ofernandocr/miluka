@@ -8,6 +8,7 @@ import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
 import { useWallets } from "@/hooks/useWallets"
 import { useBudgets } from "@/hooks/useBudgets"
+import { useRecurringTransactions } from "@/hooks/useRecurringTransactions"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -22,9 +23,11 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { QuickAddFab } from "@/components/ui/QuickAddFab"
 import { QuickAddDialog } from "@/components/ui/QuickAddDialog"
+import { UpcomingRecurringSection } from "@/components/recurring/UpcomingRecurringSection"
 import { computeBudgetSpent } from "@/lib/budgets"
 import { filterByTimeRange, buildUnifiedCategories, computeWalletSummaries } from "@/lib/dashboard"
 import { getTopExpenseCategories } from "@/lib/quickAdd"
+import { getUpcomingRecurring } from "@/lib/recurring"
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
 
 import type { NewTransaction, Budget, Category } from "@/lib/types"
@@ -46,6 +49,7 @@ export default function Dashboard() {
   const { categories } = useCategories(user?.id)
   const { wallets } = useWallets(user?.id)
   const { budgets } = useBudgets(user?.id)
+  const { recurring: recurringTemplates } = useRecurringTransactions(user?.id)
   const navigate = useNavigate()
 
   const [selectedWalletId, setSelectedWalletId] = useState<string>("all")
@@ -56,6 +60,11 @@ export default function Dashboard() {
   const topCategories = useMemo(
     () => getTopExpenseCategories(transactions, categories),
     [transactions, categories]
+  )
+
+  const upcomingRecurring = useMemo(
+    () => getUpcomingRecurring(recurringTemplates, 3),
+    [recurringTemplates]
   )
 
   const timeFiltered = useMemo(
@@ -343,6 +352,8 @@ export default function Dashboard() {
           )
         })}
       </motion.div>
+
+      <UpcomingRecurringSection recurring={upcomingRecurring} />
 
       <QuickAddFab
         quickCategories={topCategories}
