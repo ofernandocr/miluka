@@ -71,7 +71,7 @@ export function getOverdueCount(recurring: RecurringTransaction[]): number {
 
 export function getUpcomingRecurring(
   recurring: RecurringTransaction[],
-  limit = 3
+  limit = 5
 ): RecurringTransaction[] {
   return [...recurring]
     .filter((r) => r.is_active)

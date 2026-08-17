@@ -52,41 +52,6 @@ export function filterByTimeRange(transactions: Transaction[], timeRange: TimeRa
   return filterByPeriod(transactions, timeRange === "all" ? { kind: "all" } : getCurrentPeriod())
 }
 
-export interface GeneralSummaryItem {
-  currency: string
-  income: number
-  expense: number
-  balance: number
-}
-
-export function computeGeneralSummary(
-  transactions: Transaction[],
-  wallets: Wallet[]
-): GeneralSummaryItem[] {
-  const walletMap = new Map(wallets.map((w) => [w.id, w]))
-  const byCurrency = new Map<string, GeneralSummaryItem>()
-
-  for (const w of wallets) {
-    byCurrency.set(w.currency, { currency: w.currency, income: 0, expense: 0, balance: 0 })
-  }
-
-  for (const t of transactions) {
-    const wallet = t.wallet_id ? walletMap.get(t.wallet_id) : undefined
-    if (!wallet) continue
-    const item = byCurrency.get(wallet.currency)
-    if (!item) continue
-    const amount = Number(t.amount)
-    if (t.type === "income") item.income += amount
-    else item.expense += amount
-  }
-
-  const result = [...byCurrency.values()]
-    .map((item) => ({ ...item, balance: item.income - item.expense }))
-    .sort((a, b) => a.currency.localeCompare(b.currency))
-
-  return result
-}
-
 export interface CategoryDataItem {
   id: string
   name: string

@@ -74,7 +74,7 @@ describe("hasDuplicateRecurringTemplate", () => {
 })
 
 describe("getUpcomingRecurring", () => {
-  it("returns up to the default limit (3) active templates sorted ascending by next_due_date", () => {
+  it("returns up to the default limit (5) active templates sorted ascending by next_due_date", () => {
     const recurring = [
       makeRecurring({ id: "a", next_due_date: "2026-09-10" }),
       makeRecurring({ id: "b", next_due_date: "2026-09-05" }),
@@ -83,8 +83,8 @@ describe("getUpcomingRecurring", () => {
       makeRecurring({ id: "e", next_due_date: "2026-09-15" }),
     ]
     const result = getUpcomingRecurring(recurring)
-    expect(result).toHaveLength(3)
-    expect(result.map((r) => r.id)).toEqual(["d", "b", "a"])
+    expect(result).toHaveLength(5)
+    expect(result.map((r) => r.id)).toEqual(["d", "b", "a", "e", "c"])
   })
 
   it("respects the limit argument", () => {

@@ -91,10 +91,9 @@ Add `wallet_id` to the existing `transactions` table:
 - Replaces the old binary `TimeRangeToggle`; the period is resolved against an arbitrary `{year, month}` (not just "now")
 
 ### 4.3 Summary Cards
-- **General summary** (Income / Expenses / Balance across all wallets) is ALWAYS visible at the top, regardless of selected period or wallet
-- Amounts grouped by currency (never summed across currencies); wallets without transactions still show zeroed entries
+- Each wallet section shows Income / Expenses / Balance cards for that wallet's currency, driven by the selected period
+- Wallets without transactions in the period still show zeroed entries so their figures stay visible
 - Balance = income − expense for the selected period (period flow, not cumulative)
-- Per-wallet sections each show the same three cards for that wallet's currency
 - Each amount displayed with its currency symbol
 
 ### 4.4 Spending by Category (Unified List)
@@ -110,14 +109,14 @@ Shows expense breakdown by category for the selected wallet(s), driven by the SA
 ### 4.5 Visual Design
 - Light/Dark theme with system preference detection
 - Collapsible sidebar (desktop) / bottom tab bar (mobile)
-- No page H1 title — the top bar holds the wallet selector and period selector, and the always-visible general summary cards anchor the screen
+- No page H1 title — the top bar holds the wallet selector and period selector, and the per-wallet summary cards anchor the screen
 - Staggered list animations for transactions, categories, wallets, budgets
 - Hover/tap effects on all interactive elements
 - Monospace numbers (JetBrains Mono) for financial data
-- Friendly shapes: rounded (`rounded-2xl`) gradient cards for all summary figures (general + per-wallet)
+- Friendly shapes: rounded (`rounded-2xl`) gradient cards for the per-wallet summary figures
 
 ### 4.6 Upcoming Recurring
-- Dashboard shows the 3 nearest active recurring templates ordered ascending by `next_due_date`; past-due active templates surface first with a "Due" badge
+- Dashboard shows the 5 nearest active recurring templates ordered ascending by `next_due_date`; past-due active templates surface first with a "Due" badge
 - Rendered as a compact card (category icon, description as primary text, category name muted when a description exists, schedule subtitle, amount + next-due date) after the wallet summaries and before the QuickAddFAB
 - "View all →" link navigates to `/recurring`
 - Data loaded via `useRecurringTransactions` (same hook as /recurring); the auto-generation RPC (`generate_recurring_transactions()`) also runs on Dashboard load

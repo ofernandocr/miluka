@@ -23,11 +23,10 @@ import { QuickAddFab } from "@/components/ui/QuickAddFab"
 import { QuickAddDialog } from "@/components/ui/QuickAddDialog"
 import { UpcomingRecurringSection } from "@/components/recurring/UpcomingRecurringSection"
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector"
-import { GeneralSummary } from "@/components/dashboard/GeneralSummary"
 import { WalletSummaryCards } from "@/components/dashboard/WalletSummaryCards"
 import { SpendingByCategoryList } from "@/components/dashboard/SpendingByCategoryList"
 import { computeBudgetSpent } from "@/lib/budgets"
-import { buildUnifiedCategories, computeGeneralSummary, computeWalletSummaries, filterByPeriod, getCurrentPeriod } from "@/lib/dashboard"
+import { buildUnifiedCategories, computeWalletSummaries, filterByPeriod, getCurrentPeriod } from "@/lib/dashboard"
 import { getUpcomingRecurring } from "@/lib/recurring"
 import { getCurrencySymbol } from "@/lib/utils"
 import type { NewTransaction, Budget } from "@/lib/types"
@@ -55,18 +54,13 @@ export default function Dashboard() {
   })
 
   const upcomingRecurring = useMemo(
-    () => getUpcomingRecurring(recurringTemplates, 3),
+    () => getUpcomingRecurring(recurringTemplates),
     [recurringTemplates]
   )
 
   const timeFiltered = useMemo(
     () => filterByPeriod(transactions, period),
     [transactions, period]
-  )
-
-  const generalSummary = useMemo(
-    () => computeGeneralSummary(timeFiltered, wallets),
-    [timeFiltered, wallets]
   )
 
   const walletSummaries = useMemo(
@@ -127,8 +121,6 @@ export default function Dashboard() {
 
         <PeriodSelector period={period} onChange={setPeriod} />
       </div>
-
-      <GeneralSummary items={generalSummary} />
 
       {wallets.length === 0 && (
         <EmptyState

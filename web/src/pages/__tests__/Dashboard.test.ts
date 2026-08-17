@@ -4,7 +4,6 @@ import {
   isInMonth,
   filterByTimeRange,
   filterByPeriod,
-  computeGeneralSummary,
   computeCategoryData,
   computeWalletSummaries,
   buildUnifiedCategories,
@@ -84,51 +83,6 @@ describe("filterByPeriod", () => {
 
   it("returns empty when no transactions match the selected month", () => {
     expect(filterByPeriod([otherMonth], { kind: "month", year: 2026, month: 3 })).toHaveLength(0)
-  })
-})
-
-describe("computeGeneralSummary", () => {
-  it("groups income, expense and balance per currency", () => {
-    const transactions = [
-      makeTx({ wallet_id: "w1", type: "income", amount: 1000 }),
-      makeTx({ wallet_id: "w1", type: "expense", amount: 300 }),
-      makeTx({ wallet_id: "w2", type: "expense", amount: 50 }),
-    ]
-    const result = computeGeneralSummary(transactions, mockWallets)
-    expect(result).toHaveLength(2)
-
-    const mxn = result.find((r) => r.currency === "MXN")!
-    expect(mxn.income).toBe(1000)
-    expect(mxn.expense).toBe(300)
-    expect(mxn.balance).toBe(700)
-
-    const usd = result.find((r) => r.currency === "USD")!
-    expect(usd.expense).toBe(50)
-    expect(usd.balance).toBe(-50)
-  })
-
-  it("seeds zeroed entries for wallets without transactions", () => {
-    const transactions = [makeTx({ wallet_id: "w1", type: "income", amount: 100 })]
-    const result = computeGeneralSummary(transactions, mockWallets)
-    const usd = result.find((r) => r.currency === "USD")!
-    expect(usd.income).toBe(0)
-    expect(usd.expense).toBe(0)
-    expect(usd.balance).toBe(0)
-  })
-
-  it("ignores transactions without a matching wallet", () => {
-    const transactions = [makeTx({ wallet_id: "missing", type: "expense", amount: 500 })]
-    const result = computeGeneralSummary(transactions, mockWallets)
-    expect(result.every((r) => r.expense === 0)).toBe(true)
-  })
-
-  it("returns empty for no wallets", () => {
-    expect(computeGeneralSummary([makeTx()], [])).toHaveLength(0)
-  })
-
-  it("sorts entries by currency", () => {
-    const result = computeGeneralSummary([], mockWallets)
-    expect(result.map((r) => r.currency)).toEqual(["MXN", "USD"])
   })
 })
 
