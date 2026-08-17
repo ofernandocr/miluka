@@ -30,7 +30,7 @@ import { getTopExpenseCategories } from "@/lib/quickAdd"
 import { getUpcomingRecurring } from "@/lib/recurring"
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
 
-import type { NewTransaction, NewRecurringTransaction, Budget, Category } from "@/lib/types"
+import type { NewTransaction, Budget, Category } from "@/lib/types"
 import type { TimeRange } from "@/lib/dashboard"
 
 const stagger = {
@@ -49,7 +49,7 @@ export default function Dashboard() {
   const { categories } = useCategories(user?.id)
   const { wallets } = useWallets(user?.id)
   const { budgets } = useBudgets(user?.id)
-  const { recurring: recurringTemplates, createRecurring } = useRecurringTransactions(user?.id)
+  const { recurring: recurringTemplates } = useRecurringTransactions(user?.id)
   const navigate = useNavigate()
 
   const [selectedWalletId, setSelectedWalletId] = useState<string>("all")
@@ -101,14 +101,6 @@ export default function Dashboard() {
   const handleCreate = async (data: NewTransaction) => {
     await createTransaction(data)
     setDialogOpen(false)
-  }
-
-  const handleCreateRecurring = async (template: NewRecurringTransaction) => {
-    try {
-      await createRecurring(template)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create recurring template")
-    }
   }
 
   const handleQuickAdd = async (amount: number, description: string) => {
@@ -387,7 +379,6 @@ export default function Dashboard() {
             wallets={wallets}
             onSubmit={handleCreate}
             onCancel={() => setDialogOpen(false)}
-            onCreateRecurring={handleCreateRecurring}
           />
         </DialogContent>
       </Dialog>

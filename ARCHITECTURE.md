@@ -153,11 +153,6 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 - FAB (`QuickAddFab`) shows a `+` icon when closed; when tapped, expands to a pill showing `+ New` and deploys an animated vertical stack of category shortcuts (top 4 most-used expense categories); each shortcut shows the category name to the left and a tinted circle with the icon to the right; backdrop blurs the background while the menu is open; a second tap on the FAB opens the full "New Transaction" form; available on all screen sizes
 - Sidebar persists state in `localStorage`
 
-### TransactionForm
-- Create mode is a 6-7 step wizard (Type → Wallet? → Amount → Category → Description → Date → Recurring?). The final step is an optional "Make it recurring?" checkbox; when enabled it reveals a frequency selector and (for non-weekly) a day-of-month selector
-- On submit the form calls `onSubmit` (creates the transaction) and, when the recurring checkbox is on, also calls an optional `onCreateRecurring` prop with a template seeded from the same amount/type/description/category/wallet/frequency; the transaction is always saved even if the recurring template creation fails (errors surface as a toast from the page)
-- Edit mode renders the classic single-page form and never shows the recurring checkbox
-
 ### Animations
 - `motion` library (Framer Motion v11) for stagger, layout, and gesture animations
 - Staggered list entries (0.03-0.06s delay per item)
