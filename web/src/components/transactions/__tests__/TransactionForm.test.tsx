@@ -180,4 +180,51 @@ describe("TransactionForm recurring checkbox (inline on Date step)", () => {
 
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
   })
+
+  it("advances to the Date step when Enter is pressed on the description field, without saving", async () => {
+    const onSubmit = vi.fn()
+    render(
+      <TransactionForm
+        categories={[category]}
+        wallets={[wallet]}
+        onSubmit={onSubmit}
+        onCancel={() => {}}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("radio", { name: /expense/i }))
+    fireEvent.click(screen.getByRole("button", { name: "Next" }))
+    fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "100" } })
+    fireEvent.click(screen.getByRole("button", { name: "Next" }))
+    fireEvent.click(screen.getByRole("button", { name: "🍔 Food" }))
+    await waitFor(() => expect(screen.getByLabelText("Description (optional)")).toBeInTheDocument())
+
+    fireEvent.change(screen.getByLabelText("Description (optional)"), { target: { value: "Lunch" } })
+    fireEvent.keyDown(screen.getByLabelText("Description (optional)"), { key: "Enter" })
+
+    await waitFor(() => expect(screen.getByLabelText("Date")).toBeInTheDocument())
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it("does not save the transaction when the form is submitted before the final step", () => {
+    const onSubmit = vi.fn()
+    const { container } = render(
+      <TransactionForm
+        categories={[category]}
+        wallets={[wallet]}
+        onSubmit={onSubmit}
+        onCancel={() => {}}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("radio", { name: /expense/i }))
+    fireEvent.click(screen.getByRole("button", { name: "Next" }))
+    fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "100" } })
+    fireEvent.click(screen.getByRole("button", { name: "Next" }))
+    fireEvent.click(screen.getByRole("button", { name: "🍔 Food" }))
+
+    fireEvent.submit(container.querySelector("form")!)
+
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
 })

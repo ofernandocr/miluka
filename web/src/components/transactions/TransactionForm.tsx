@@ -403,7 +403,12 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
 
   // ── Create mode: wizard ──
   return (
-    <form onSubmit={(e) => { e.preventDefault(); if (!submitting) handleSubmit() }} onKeyDown={handleKeyDown} className="space-y-6">
+    <form
+      onSubmit={(e) => { e.preventDefault(); if (!submitting && step === totalSteps - 1) handleSubmit() }}
+      onKeyDown={handleKeyDown}
+      onKeyDownCapture={(e) => { if (e.key === "Enter") e.preventDefault() }}
+      className="space-y-6"
+    >
       {/* Progress dots */}
       <div className="flex items-center justify-center gap-2" aria-label={`Step ${step + 1} of ${totalSteps}`}>
         {Array.from({ length: totalSteps }).map((_, i) => (
