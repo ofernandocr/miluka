@@ -7,7 +7,10 @@ interface SpendingByCategoryListProps {
   onCategoryClick: (id: string) => void
   currency: string
   showBudgetsHint?: boolean
+  nested?: boolean
 }
+
+const MAX_VISIBLE_ROWS = 8
 
 function AnimatedBar({ width, color }: { width: string; color: string }) {
   const [displayWidth, setDisplayWidth] = useState("0%")
@@ -30,18 +33,19 @@ function AnimatedBar({ width, color }: { width: string; color: string }) {
   )
 }
 
-export function SpendingByCategoryList({ unified, onCategoryClick, currency, showBudgetsHint }: SpendingByCategoryListProps) {
+export function SpendingByCategoryList({ unified, onCategoryClick, currency, showBudgetsHint, nested }: SpendingByCategoryListProps) {
   const maxSpent = Math.max(...unified.map((c) => c.spent), 1)
+  const scrollable = unified.length > MAX_VISIBLE_ROWS
 
   return (
-    <div className="rounded-2xl border bg-card p-4 transition-shadow hover:shadow-elevated">
+    <div className={nested ? "border-t pt-4" : "rounded-2xl border bg-card p-4 transition-shadow hover:shadow-elevated"}>
       <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Spending by Category</h3>
       {showBudgetsHint && (
         <p className="mb-3 -mt-2 text-xs text-muted-foreground">
           Budgets are monthly — switch to a month view to see them.
         </p>
       )}
-      <div className="animate-in-stagger-sm space-y-2">
+      <div className={`animate-in-stagger-sm space-y-2 ${scrollable ? "max-h-[30rem] overflow-y-auto pr-1" : ""}`}>
         {unified.map((cat) => {
           const hasBudget = cat.budgetAmount !== null
           const barPct = hasBudget ? cat.budgetPct! : 0

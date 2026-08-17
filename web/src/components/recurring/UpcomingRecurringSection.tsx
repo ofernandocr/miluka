@@ -18,7 +18,7 @@ export function UpcomingRecurringSection({ recurring }: UpcomingRecurringSection
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2 text-sm font-medium">
             <Calendar className="h-4 w-4 text-muted-foreground" />
-            Upcoming Recurring
+            Upcoming
           </span>
           <Link to="/recurring" className="text-sm text-primary hover:underline">
             View all →

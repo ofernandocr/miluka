@@ -104,12 +104,14 @@ Shows expense breakdown by category for the selected wallet(s), driven by the SA
 - Sorted highest to lowest by amount
 - "Manage budgets →" link at bottom (only when budgets exist)
 - In **All time** mode budget bars are suppressed (a monthly budget vs. lifetime spend is meaningless) with a hint caption: "Budgets are monthly — switch to a month view to see them."
+- When a wallet has more than 8 categories, the list becomes a vertical scroll area (`max-h-[30rem] overflow-y-auto`) so the wallet block does not grow unbounded
 - Budget spent is evaluated against the selected month (monthly budgets) or intersects `[start,end]` (custom-period budgets); this fixes the previous latent bug where monthly budgets always looked at the current month
 
 ### 4.5 Visual Design
 - Light/Dark theme with system preference detection
 - Collapsible sidebar (desktop) / bottom tab bar (mobile)
 - No page H1 title — the top bar holds the wallet selector and period selector, and the per-wallet summary cards anchor the screen
+- Each wallet is a self-contained **block** (single `rounded-2xl` card with `bg-card`) holding the header, Income/Expenses/Balance cards, and the spending-by-category list; a colored top strip (`wallet.color`) visually distinguishes one wallet block from another
 - Staggered list animations for transactions, categories, wallets, budgets
 - Hover/tap effects on all interactive elements
 - Monospace numbers (JetBrains Mono) for financial data
@@ -117,7 +119,7 @@ Shows expense breakdown by category for the selected wallet(s), driven by the SA
 
 ### 4.6 Upcoming Recurring
 - Dashboard shows the 5 nearest active recurring templates ordered ascending by `next_due_date`; past-due active templates surface first with a "Due" badge
-- Rendered as a compact card (category icon, description as primary text, category name muted when a description exists, schedule subtitle, amount + next-due date) after the wallet summaries and before the QuickAddFAB
+- Rendered as a compact card titled **"Upcoming"** (category icon, description as primary text, category name muted when a description exists, schedule subtitle, amount + next-due date) after the wallet summaries and before the QuickAddFAB
 - "View all →" link navigates to `/recurring`
 - Data loaded via `useRecurringTransactions` (same hook as /recurring); the auto-generation RPC (`generate_recurring_transactions()`) also runs on Dashboard load
 - Frontend-only; no schema change

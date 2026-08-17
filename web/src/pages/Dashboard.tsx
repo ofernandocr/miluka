@@ -138,52 +138,63 @@ export default function Dashboard() {
           const unified = buildUnifiedCategories(summary.categoryData, budgetsInView, totalExpense)
 
           return (
-            <div key={summary.wallet.id} className="animate-fade-up space-y-4">
-              {/* Wallet Header */}
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
-                  style={{ backgroundColor: summary.wallet.color + "20" }}
-                >
-                  <span role="img" aria-label={summary.wallet.name}>
-                    {summary.wallet.icon}
-                  </span>
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold">{summary.wallet.name}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {getCurrencySymbol(summary.wallet.currency)} {summary.wallet.currency}
-                  </p>
-                </div>
-              </div>
-
-              <WalletSummaryCards
-                income={summary.income}
-                expense={summary.expense}
-                currency={summary.wallet.currency}
+            <div
+              key={summary.wallet.id}
+              className="animate-fade-up overflow-hidden rounded-2xl border bg-card shadow-sm transition-shadow hover:shadow-elevated"
+            >
+              <div
+                className="h-1.5 w-full"
+                style={{ backgroundColor: summary.wallet.color }}
+                aria-hidden="true"
               />
-
-              {unified.length > 0 ? (
-                <SpendingByCategoryList
-                  unified={unified}
-                  onCategoryClick={handleCategoryClick}
-                  currency={summary.wallet.currency}
-                  showBudgetsHint={period.kind === "all" && budgetsForWallet.length > 0}
-                />
-              ) : (
-                <div className="rounded-2xl border bg-card py-8 text-center text-sm text-muted-foreground">
-                  No expenses in this wallet for the selected period.
+              <div className="space-y-4 p-4 sm:p-5">
+                {/* Wallet Header */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
+                    style={{ backgroundColor: summary.wallet.color + "20" }}
+                  >
+                    <span role="img" aria-label={summary.wallet.name}>
+                      {summary.wallet.icon}
+                    </span>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold">{summary.wallet.name}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {getCurrencySymbol(summary.wallet.currency)} {summary.wallet.currency}
+                    </p>
+                  </div>
                 </div>
-              )}
 
-              {budgetsForWallet.length > 0 && (
-                <button
-                  onClick={() => navigate("/budgets")}
-                  className="w-full rounded-lg border border-dashed py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-                >
-                  Manage budgets →
-                </button>
-              )}
+                <WalletSummaryCards
+                  income={summary.income}
+                  expense={summary.expense}
+                  currency={summary.wallet.currency}
+                />
+
+                {unified.length > 0 ? (
+                  <SpendingByCategoryList
+                    unified={unified}
+                    onCategoryClick={handleCategoryClick}
+                    currency={summary.wallet.currency}
+                    showBudgetsHint={period.kind === "all" && budgetsForWallet.length > 0}
+                    nested
+                  />
+                ) : (
+                  <div className="border-t pt-4 text-center text-sm text-muted-foreground">
+                    No expenses in this wallet for the selected period.
+                  </div>
+                )}
+
+                {budgetsForWallet.length > 0 && (
+                  <button
+                    onClick={() => navigate("/budgets")}
+                    className="w-full rounded-lg border border-dashed py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                  >
+                    Manage budgets →
+                  </button>
+                )}
+              </div>
             </div>
           )
         })}

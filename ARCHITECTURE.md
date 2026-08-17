@@ -203,13 +203,14 @@ The `PeriodSelector` provides chevron navigation (`‹`/`›`), a dropdown with 
 
 The page shows:
 - No H1 title — the top bar holds the wallet filter and `PeriodSelector`
-- Per-wallet sections (header, summary cards, unified spending list):
+- Per-wallet **blocks**: each wallet is a single `rounded-2xl border bg-card` container with a `wallet.color` top strip, holding the header (icon, name, currency), summary cards, and the unified spending list:
   - Summary cards (Income, Expenses, Balance) always visible per wallet, including empty periods (zeroed)
   - Categories with budget: budget progress bar (spent/budget) with color coding (green/yellow/orange/red), evaluated against the selected month
   - Categories without budget: percentage of total spending bar using category color
   - Sorted highest to lowest by amount
   - "Manage budgets →" link at bottom (only when budgets exist)
   - In All time mode budget bars are suppressed with a "Budgets are monthly" hint
+  - The spending list scrolls vertically (`max-h-[30rem] overflow-y-auto`) when a wallet has more than 8 categories, keeping the block compact
 
 When a specific wallet is selected via dropdown, only that wallet's section is shown.
 
