@@ -1,18 +1,24 @@
 import type { Budget, Transaction } from "@/lib/types"
+import type { Period } from "@/lib/dashboard"
 import { formatDate } from "@/lib/utils"
 
-export function getBudgetDateRange(budget: Budget): { start: Date; end: Date } {
+export function getBudgetDateRange(budget: Budget, period?: Period): { start: Date; end: Date } {
   if (budget.start_date && budget.end_date) {
     return { start: new Date(budget.start_date), end: new Date(budget.end_date) }
   }
-  const now = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), 1)
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  const year = period?.kind === "month" ? period.year : new Date().getFullYear()
+  const month = period?.kind === "month" ? period.month - 1 : new Date().getMonth()
+  const start = new Date(year, month, 1)
+  const end = new Date(year, month + 1, 0)
   return { start, end }
 }
 
-export function computeBudgetSpent(budget: Budget, transactions: Transaction[]): number {
-  const { start, end } = getBudgetDateRange(budget)
+export function computeBudgetSpent(
+  budget: Budget,
+  transactions: Transaction[],
+  period?: Period
+): number {
+  const { start, end } = getBudgetDateRange(budget, period)
   return transactions
     .filter((t) => {
       if (t.type !== "expense") return false

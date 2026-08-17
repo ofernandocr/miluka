@@ -22,15 +22,16 @@ import { EmptyState } from "@/components/ui/EmptyState"
 import { QuickAddFab } from "@/components/ui/QuickAddFab"
 import { QuickAddDialog } from "@/components/ui/QuickAddDialog"
 import { UpcomingRecurringSection } from "@/components/recurring/UpcomingRecurringSection"
-import { TimeRangeToggle } from "@/components/dashboard/TimeRangeToggle"
+import { PeriodSelector } from "@/components/dashboard/PeriodSelector"
+import { GeneralSummary } from "@/components/dashboard/GeneralSummary"
 import { WalletSummaryCards } from "@/components/dashboard/WalletSummaryCards"
 import { SpendingByCategoryList } from "@/components/dashboard/SpendingByCategoryList"
 import { computeBudgetSpent } from "@/lib/budgets"
-import { filterByTimeRange, buildUnifiedCategories, computeWalletSummaries } from "@/lib/dashboard"
+import { buildUnifiedCategories, computeGeneralSummary, computeWalletSummaries, filterByPeriod, getCurrentPeriod } from "@/lib/dashboard"
 import { getUpcomingRecurring } from "@/lib/recurring"
 import { getCurrencySymbol } from "@/lib/utils"
 import type { NewTransaction, Budget } from "@/lib/types"
-import type { TimeRange } from "@/lib/dashboard"
+import type { Period } from "@/lib/dashboard"
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -42,7 +43,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
 
   const [selectedWalletId, setSelectedWalletId] = useState<string>("all")
-  const [timeRange, setTimeRange] = useState<TimeRange>("month")
+  const [period, setPeriod] = useState<Period>(getCurrentPeriod)
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const { quickCategory, setQuickCategory, topCategories, handleQuickAdd, handleCreateRecurring } = useQuickAdd({
@@ -59,8 +60,13 @@ export default function Dashboard() {
   )
 
   const timeFiltered = useMemo(
-    () => filterByTimeRange(transactions, timeRange),
-    [transactions, timeRange]
+    () => filterByPeriod(transactions, period),
+    [transactions, period]
+  )
+
+  const generalSummary = useMemo(
+    () => computeGeneralSummary(timeFiltered, wallets),
+    [timeFiltered, wallets]
   )
 
   const walletSummaries = useMemo(
@@ -77,7 +83,7 @@ export default function Dashboard() {
     const map = new Map<string, { budget: Budget; spent: number }[]>()
     for (const b of budgets) {
       if (!b.wallet_id) continue
-      const spent = computeBudgetSpent(b, transactions)
+      const spent = computeBudgetSpent(b, transactions, period)
       const list = map.get(b.wallet_id) ?? []
       list.push({ budget: b, spent })
       map.set(b.wallet_id, list)
@@ -101,8 +107,6 @@ export default function Dashboard() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 pb-24 lg:pb-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-
         <div className="flex items-center gap-2">
           {wallets.length > 1 && (
             <Select value={selectedWalletId} onValueChange={setSelectedWalletId}>
@@ -119,16 +123,18 @@ export default function Dashboard() {
               </SelectContent>
             </Select>
           )}
-
-          <TimeRangeToggle value={timeRange} onChange={setTimeRange} />
         </div>
+
+        <PeriodSelector period={period} onChange={setPeriod} />
       </div>
 
-      {visibleSummaries.length === 0 && (
+      <GeneralSummary items={generalSummary} />
+
+      {wallets.length === 0 && (
         <EmptyState
           icon={<BarChart3 className="h-6 w-6" />}
-          title="No transactions yet"
-          description="Add one to get started."
+          title="No wallets yet"
+          description="A default wallet is created when you sign up."
         />
       )}
 
@@ -136,7 +142,8 @@ export default function Dashboard() {
         {visibleSummaries.map((summary) => {
           const totalExpense = summary.categoryData.reduce((s, c) => s + c.value, 0)
           const budgetsForWallet = walletBudgets.get(summary.wallet.id) ?? []
-          const unified = buildUnifiedCategories(summary.categoryData, budgetsForWallet, totalExpense)
+          const budgetsInView = period.kind === "all" ? [] : budgetsForWallet
+          const unified = buildUnifiedCategories(summary.categoryData, budgetsInView, totalExpense)
 
           return (
             <div key={summary.wallet.id} className="animate-fade-up space-y-4">
@@ -168,6 +175,8 @@ export default function Dashboard() {
                 <SpendingByCategoryList
                   unified={unified}
                   onCategoryClick={handleCategoryClick}
+                  currency={summary.wallet.currency}
+                  showBudgetsHint={period.kind === "all" && budgetsForWallet.length > 0}
                 />
               ) : (
                 <div className="rounded-2xl border bg-card py-8 text-center text-sm text-muted-foreground">

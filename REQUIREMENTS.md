@@ -84,32 +84,37 @@ Add `wallet_id` to the existing `transactions` table:
 - Dropdown/selector to filter by a specific wallet
 - When filtered, only that wallet's transactions are shown
 
-### 4.2 Time Range
-- Toggle: "This month" / "All time"
-- "This month" = current month (from 1st to today)
-- "All time" = lifetime (no date filter)
+### 4.2 Period Selector
+- Single navigable period drives the entire dashboard (unified "one clock" model)
+- `PeriodSelector`: chevrons (`‹`/`›`), month label, dropdown with native month input to jump, "This month" reset, and `[Month | All time]` segments
+- Next-month chevron disabled at the current month; "All time" hides the chevrons
+- Replaces the old binary `TimeRangeToggle`; the period is resolved against an arbitrary `{year, month}` (not just "now")
 
 ### 4.3 Summary Cards
-- Income (green) — total income in selected time range
-- Expenses (red) — total expenses in selected time range
-- Balance (green/red) — income minus expenses
-
-Each amount displayed with its currency symbol. If multiple wallets visible, amounts grouped by currency.
+- **General summary** (Income / Expenses / Balance across all wallets) is ALWAYS visible at the top, regardless of selected period or wallet
+- Amounts grouped by currency (never summed across currencies); wallets without transactions still show zeroed entries
+- Balance = income − expense for the selected period (period flow, not cumulative)
+- Per-wallet sections each show the same three cards for that wallet's currency
+- Each amount displayed with its currency symbol
 
 ### 4.4 Spending by Category (Unified List)
-Shows expense breakdown by category for the selected wallet(s) and time range. Merges budget data with spending data:
+Shows expense breakdown by category for the selected wallet(s), driven by the SAME period:
 
 - Categories with budget: budget progress bar (spent/budget) with color coding
 - Categories without budget: percentage of total spending bar
 - Sorted highest to lowest by amount
 - "Manage budgets →" link at bottom (only when budgets exist)
+- In **All time** mode budget bars are suppressed (a monthly budget vs. lifetime spend is meaningless) with a hint caption: "Budgets are monthly — switch to a month view to see them."
+- Budget spent is evaluated against the selected month (monthly budgets) or intersects `[start,end]` (custom-period budgets); this fixes the previous latent bug where monthly budgets always looked at the current month
 
 ### 4.5 Visual Design
 - Light/Dark theme with system preference detection
 - Collapsible sidebar (desktop) / bottom tab bar (mobile)
+- No page H1 title — the top bar holds the wallet selector and period selector, and the always-visible general summary cards anchor the screen
 - Staggered list animations for transactions, categories, wallets, budgets
 - Hover/tap effects on all interactive elements
 - Monospace numbers (JetBrains Mono) for financial data
+- Friendly shapes: rounded (`rounded-2xl`) gradient cards for all summary figures (general + per-wallet)
 
 ### 4.6 Upcoming Recurring
 - Dashboard shows the 3 nearest active recurring templates ordered ascending by `next_due_date`; past-due active templates surface first with a "Due" badge

@@ -16,7 +16,7 @@ Budgets let users set monthly spending limits scoped to a **wallet** or a **cate
 
 ## Data Flow
 1. `useBudgets(userId)` (`web/src/hooks/useBudgets.ts`) loads budgets with joins `category:categories(*)` and `wallet:wallets(*)`, ordered by `created_at`. Exposes `createBudget`, `updateBudget`, `deleteBudget`; each mutation refetches.
-2. Spent amount is computed client-side (never stored) via `computeBudgetSpent` in `web/src/lib/budgets.ts` — expense transactions within the budget's date range (or current month when no period is set) that match `category_id` and/or `wallet_id`.
+2. Spent amount is computed client-side (never stored) via `computeBudgetSpent` in `web/src/lib/budgets.ts` — expense transactions within the budget's date range that match `category_id` and/or `wallet_id`. It accepts an optional `Period` (from `lib/dashboard.ts`): monthly budgets resolve to the selected month, custom-period budgets intersect `[start, end]`. On the Dashboard the period is only passed in month mode (budget bars are suppressed in All time).
 3. The Dashboard merges budgets with the spending list via `buildUnifiedCategories` (`web/src/lib/dashboard.ts`) so each category row can show a budget bar with "left to spend" / "overspent" states.
 
 ## Pure Functions (`web/src/lib/budgets.ts`)

@@ -5,6 +5,7 @@ import {
   getProgressTextColor,
   getPeriodLabel,
 } from "@/lib/budgets"
+import type { Period } from "@/lib/dashboard"
 import type { Budget, Transaction } from "@/lib/types"
 
 const makeBudget = (overrides: Partial<Budget> = {}): Budget => ({
@@ -50,6 +51,26 @@ describe("getBudgetDateRange", () => {
     expect(start.getMonth()).toBe(now.getMonth())
     expect(start.getDate()).toBe(1)
     expect(end.getDate()).toBe(lastDay)
+  })
+
+  it("resolves monthly budgets to the selected month when a period is provided", () => {
+    const budget = makeBudget()
+    const period: Period = { kind: "month", year: 2025, month: 3 }
+    const { start, end } = getBudgetDateRange(budget, period)
+    expect(start.getFullYear()).toBe(2025)
+    expect(start.getMonth()).toBe(2)
+    expect(start.getDate()).toBe(1)
+    expect(end.getFullYear()).toBe(2025)
+    expect(end.getMonth()).toBe(2)
+    expect(end.getDate()).toBe(31)
+  })
+
+  it("keeps custom start/end even when a period is provided", () => {
+    const budget = makeBudget({ start_date: "2026-03-01", end_date: "2026-03-31" })
+    const period: Period = { kind: "month", year: 2025, month: 3 }
+    const { start, end } = getBudgetDateRange(budget, period)
+    expect(start.toISOString().split("T")[0]).toBe("2026-03-01")
+    expect(end.toISOString().split("T")[0]).toBe("2026-03-31")
   })
 })
 
@@ -107,6 +128,16 @@ describe("computeBudgetSpent", () => {
       makeTx({ amount: 75, wallet_id: "w2", category_id: "c2" }),
     ]
     expect(computeBudgetSpent(budget, transactions)).toBe(125)
+  })
+
+  it("resolves monthly budgets against the selected month", () => {
+    const budget = makeBudget({ amount: 500 })
+    const period: Period = { kind: "month", year: 2025, month: 3 }
+    const transactions = [
+      makeTx({ amount: 100, date: "2025-03-10" }),
+      makeTx({ amount: 200, date: "2025-04-10" }),
+    ]
+    expect(computeBudgetSpent(budget, transactions, period)).toBe(100)
   })
 })
 

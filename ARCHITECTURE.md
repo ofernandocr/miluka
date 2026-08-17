@@ -63,7 +63,7 @@ miluka/
         │   ├── recurring/    # RecurringForm, RecurringList (RecurringCard), RecurringOverdueBanner, UpcomingRecurringSection
         │   ├── categories/   # CategoryList, CategoryForm
         │   ├── transactions/ # TransactionList, TransactionForm, TransactionFormFields, TransactionItem, CsvImportDialog
-        │   ├── dashboard/    # TimeRangeToggle, WalletSummaryCards, SpendingByCategoryList
+        │   ├── dashboard/    # PeriodSelector, GeneralSummary, WalletSummaryCards, SpendingByCategoryList
         │   ├── exports/      # ExportSection (CSV/JSON export)
         │   └── wallets/      # WalletList, WalletForm
         └── pages/            # Route pages (Login, Register, Dashboard, Transactions, Categories, Wallets, Budgets, Recurring, Settings)
@@ -135,11 +135,16 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 - `useQuickAdd` hook encapsulates the shared quick-add FAB + dialog pattern used by Dashboard and Transactions (category ranking, quick-add handler, recurring template handler)
 - `useRecurringTransactions` includes a `useRef` guard to prevent the auto-generate RPC from looping if the server fails to advance `next_due_date`
 - Data flows: Page → Hooks → Supabase client → Kong → PostgREST → PostgreSQL
-- Filtering (wallet, time range) done client-side via `useMemo` in the Dashboard component
-  - `filterByTimeRange(transactions, timeRange)` — filters by current month
+- Filtering (period, wallet) done client-side via `useMemo` in the Dashboard component
+  - A single `Period` (`{ kind: "month"; year; month } | { kind: "all" }`) drives the whole dashboard ("one clock" model)
+  - `filterByPeriod(transactions, period)` — filters by the selected month, or returns everything for "all"
+  - `computeGeneralSummary(transactions, wallets)` — groups Income/Expense/Balance per wallet currency (never sums across currencies; zeroed entries for wallets without transactions)
   - `computeWalletSummaries(transactions, wallets)` — groups transactions per wallet, computes income/expense/categoryData per wallet
   - `computeCategoryData(transactions)` — aggregates expense amounts by category for a single wallet's transactions
+  - `buildUnifiedCategories(categoryData, budgets, totalExpense)` — merges budget data with spending data; budgets are passed only in month mode (suppressed in All time)
+  - `computeBudgetSpent(budget, transactions, period)` — resolves monthly budgets against the selected month and custom periods by intersection
 - Dashboard also loads recurring templates via `useRecurringTransactions` and renders `UpcomingRecurringSection` (top 3 active templates nearest to due date) after the wallet summaries; the auto-generation RPC (`generate_recurring_transactions()`) runs on Dashboard load too
+- `TimeRangeToggle` was retired; `PeriodSelector` (chevrons, month jump via native month input, "This month", `[Month | All time]` segments) replaces it
 
 ## Design System
 
@@ -188,21 +193,25 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 
 ## Dashboard Filtering
 
-The Dashboard uses per-wallet data isolation. When "All wallets" is selected, each wallet gets its own section with summary cards and a unified spending list:
+The Dashboard uses a single "one clock" period model plus per-wallet data isolation. A `Period` (`{ kind: "month"; year; month } | { kind: "all" }`) drives every widget, so the always-visible general summary, every wallet section, and every spending list always agree.
 
-1. `filterByTimeRange(tx, timeRange)` — filters transactions by current month
-2. `computeWalletSummaries(tx, wallets)` — returns `[{ wallet, income, expense, categoryData }]` per wallet
-3. `computeCategoryData(tx)` — returns `[{ id, name, icon, value, color }]` for a single wallet's expenses
-4. `buildUnifiedCategories(categoryData, budgets, totalExpense)` — merges budget data with spending data into a single list
+1. `filterByPeriod(tx, period)` — filters transactions by the selected month (or returns all for `"all"`)
+2. `computeGeneralSummary(tx, wallets)` — always-visible Income/Expense/Balance grouped per wallet currency (zeroed entries for wallets without transactions)
+3. `computeWalletSummaries(tx, wallets)` — returns `[{ wallet, income, expense, categoryData }]` per wallet
+4. `computeCategoryData(tx)` — returns `[{ id, name, icon, value, color }]` for a single wallet's expenses
+5. `buildUnifiedCategories(categoryData, budgets, totalExpense)` — merges budget data with spending data into a single list (budgets only passed in month mode)
 
-Each wallet section displays:
-- Wallet header (icon, name, currency)
-- Summary cards (Income, Expenses, Balance)
-- Unified spending list:
-  - Categories with budget: budget progress bar (spent/budget) with color coding (green/yellow/orange/red)
+The `PeriodSelector` provides chevron navigation (`‹`/`›`), a dropdown with a native month input for jumping, a "This month" reset, and `[Month | All time]` segments; the next chevron is disabled at the current month and hidden in All time.
+
+The page shows:
+- No H1 title — the top bar holds the wallet filter and `PeriodSelector`
+- Always-visible `GeneralSummary` (per-currency grouped cards)
+- Per-wallet sections (header, summary cards, unified spending list):
+  - Categories with budget: budget progress bar (spent/budget) with color coding (green/yellow/orange/red), evaluated against the selected month
   - Categories without budget: percentage of total spending bar using category color
   - Sorted highest to lowest by amount
   - "Manage budgets →" link at bottom (only when budgets exist)
+  - In All time mode budget bars are suppressed with a "Budgets are monthly" hint
 
 When a specific wallet is selected via dropdown, only that wallet's section is shown.
 
@@ -212,7 +221,7 @@ Transactions page supports URL-based filters via `useSearchParams`: `?category=<
 
 | Type | Tool | Location | Coverage |
 |------|------|----------|----------|
-| Unit (lib) | Vitest | `src/lib/__tests__/` | utils (17), quickAdd (5), recurring (15), csv (13), dashboard (all functions including buildUnifiedCategories), budgets (19) |
+| Unit (lib) | Vitest | `src/lib/__tests__/` | utils (17), quickAdd (5), recurring (15), csv (13), dashboard (all functions including buildUnifiedCategories, filterByPeriod, computeGeneralSummary), budgets (22) |
 | Component | Vitest + RTL | `src/components/**/__tests__/` | TransactionForm (wizard flow, recurring checkbox, keyboard nav, error resilience), QuickAddDialog (validation, submit), TransactionList (grouping, interactions, empty state) |
 | Page (logic) | Vitest | `src/pages/__tests__/` | Dashboard pure functions (imported from lib/dashboard.ts) |
 

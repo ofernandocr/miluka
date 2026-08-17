@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react"
+import { formatCurrency } from "@/lib/utils"
 import type { UnifiedCategoryItem } from "@/lib/dashboard"
 
 interface SpendingByCategoryListProps {
   unified: UnifiedCategoryItem[]
   onCategoryClick: (id: string) => void
+  currency: string
+  showBudgetsHint?: boolean
 }
 
 function AnimatedBar({ width, color }: { width: string; color: string }) {
@@ -27,12 +30,17 @@ function AnimatedBar({ width, color }: { width: string; color: string }) {
   )
 }
 
-export function SpendingByCategoryList({ unified, onCategoryClick }: SpendingByCategoryListProps) {
+export function SpendingByCategoryList({ unified, onCategoryClick, currency, showBudgetsHint }: SpendingByCategoryListProps) {
   const maxSpent = Math.max(...unified.map((c) => c.spent), 1)
 
   return (
     <div className="rounded-2xl border bg-card p-4 transition-shadow hover:shadow-elevated">
       <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Spending by Category</h3>
+      {showBudgetsHint && (
+        <p className="mb-3 -mt-2 text-xs text-muted-foreground">
+          Budgets are monthly — switch to a month view to see them.
+        </p>
+      )}
       <div className="animate-in-stagger-sm space-y-2">
         {unified.map((cat) => {
           const hasBudget = cat.budgetAmount !== null
@@ -53,8 +61,8 @@ export function SpendingByCategoryList({ unified, onCategoryClick }: SpendingByC
 
           const subtitle = hasBudget
             ? isOverspent
-              ? `$${Math.abs(remaining).toLocaleString("en-US")} overspent`
-              : `$${remaining.toLocaleString("en-US")} left to spend`
+              ? `${formatCurrency(Math.abs(remaining), currency)} overspent`
+              : `${formatCurrency(remaining, currency)} left to spend`
             : null
 
           return (
@@ -74,7 +82,7 @@ export function SpendingByCategoryList({ unified, onCategoryClick }: SpendingByC
                 <div className="flex items-center justify-between">
                   <p className="truncate text-sm font-medium">{cat.name}</p>
                   <span className="ml-2 shrink-0 text-sm font-bold tabular-nums text-foreground">
-                    ${cat.spent.toLocaleString("en-US")}
+                    {formatCurrency(cat.spent, currency)}
                   </span>
                 </div>
                 <p className={`text-xs ${isOverspent ? "text-red-500" : "text-muted-foreground"}`}>
