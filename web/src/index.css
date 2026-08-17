@@ -125,6 +125,102 @@
   }
 }
 
+/* List entrance animations */
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Staggered list container — children use nth-child delays */
+.animate-in-stagger > * {
+  opacity: 0;
+  animation-name: fade-in-up;
+  animation-duration: 0.35s;
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+
+.animate-in-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-in-stagger > *:nth-child(2) { animation-delay: 40ms; }
+.animate-in-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.animate-in-stagger > *:nth-child(4) { animation-delay: 120ms; }
+.animate-in-stagger > *:nth-child(5) { animation-delay: 160ms; }
+.animate-in-stagger > *:nth-child(6) { animation-delay: 200ms; }
+.animate-in-stagger > *:nth-child(7) { animation-delay: 240ms; }
+.animate-in-stagger > *:nth-child(8) { animation-delay: 280ms; }
+.animate-in-stagger > *:nth-child(9) { animation-delay: 320ms; }
+.animate-in-stagger > *:nth-child(10) { animation-delay: 360ms; }
+.animate-in-stagger > *:nth-child(11) { animation-delay: 400ms; }
+.animate-in-stagger > *:nth-child(12) { animation-delay: 440ms; }
+
+/* Wallet summary cards — fade from bottom, no stagger */
+.animate-fade-up {
+  opacity: 0;
+  animation-name: fade-in-up;
+  animation-duration: 0.35s;
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+
+/* FAB backdrop */
+.animate-fade-in {
+  animation-name: fade-in;
+  animation-duration: 0.2s;
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+
+/* Progress bar width animation */
+.transition-width {
+  transition: width 0.6s ease-out;
+}
+
+/* Category grid stagger (3ms per child) */
+@keyframes fade-in-up-stagger {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in-stagger-sm > * {
+  opacity: 0;
+  animation-name: fade-in-up-stagger;
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+
+.animate-in-stagger-sm > *:nth-child(1) { animation-delay: 0ms; }
+.animate-in-stagger-sm > *:nth-child(2) { animation-delay: 30ms; }
+.animate-in-stagger-sm > *:nth-child(3) { animation-delay: 60ms; }
+.animate-in-stagger-sm > *:nth-child(4) { animation-delay: 90ms; }
+.animate-in-stagger-sm > *:nth-child(5) { animation-delay: 120ms; }
+.animate-in-stagger-sm > *:nth-child(6) { animation-delay: 150ms; }
+.animate-in-stagger-sm > *:nth-child(7) { animation-delay: 180ms; }
+.animate-in-stagger-sm > *:nth-child(8) { animation-delay: 210ms; }
+.animate-in-stagger-sm > *:nth-child(9) { animation-delay: 240ms; }
+.animate-in-stagger-sm > *:nth-child(10) { animation-delay: 270ms; }
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

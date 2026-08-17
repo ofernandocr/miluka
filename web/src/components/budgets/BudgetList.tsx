@@ -1,5 +1,5 @@
+import { memo } from "react"
 import { Pencil, Trash2, PiggyBank } from "lucide-react"
-import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/EmptyState"
@@ -17,12 +17,7 @@ interface BudgetListProps {
   onDelete: (id: string) => void
 }
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 6 },
-  show: { opacity: 1, y: 0 },
-}
-
-function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & Pick<BudgetListProps, "onEdit" | "onDelete">) {
+const BudgetCard = memo(function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & Pick<BudgetListProps, "onEdit" | "onDelete">) {
   const pct = budget.amount > 0 ? (budget.spent / budget.amount) * 100 : 0
   const remaining = budget.amount - budget.spent
   const currency = budget.wallet?.currency ?? "MXN"
@@ -33,7 +28,7 @@ function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & 
     : `${budget.wallet?.icon ?? "💼"} ${budget.wallet?.name ?? "Wallet"}`
 
   return (
-    <motion.div variants={itemVariants} className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50">
+    <div className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50">
       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-lg"
         style={{ backgroundColor: (budget.category?.color ?? budget.wallet?.color ?? "#6b7280") + "20" }}>
         {icon}
@@ -82,11 +77,11 @@ function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & 
               ? `${formatCurrency(Math.abs(remaining), currency)} over`
               : `${formatCurrency(remaining, currency)} left`}
           </span>
+</div>
         </div>
-      </div>
-    </motion.div>
+    </div>
   )
-}
+})
 
 export function BudgetList({ budgets, onEdit, onDelete }: BudgetListProps) {
   const byWallet = budgets.filter((b) => !b.category_id && b.wallet_id)
@@ -110,16 +105,12 @@ export function BudgetList({ budgets, onEdit, onDelete }: BudgetListProps) {
           <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <motion.div
-            variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }}
-            initial="hidden"
-            animate="show"
-          >
+          <div className="animate-in-stagger-sm space-y-2">
             {items.map((b) => (
               <BudgetCard key={b.id} budget={b} onEdit={onEdit} onDelete={onDelete} />
             ))}
-          </motion.div>
-        </CardContent>
+            </div>
+          </CardContent>
       </Card>
     )
   }

@@ -1,5 +1,4 @@
 import { Pencil, Trash2, Lock, Tags } from "lucide-react"
-import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/EmptyState"
 import type { Category } from "@/lib/types"
@@ -8,11 +7,6 @@ interface CategoryListProps {
   categories: Category[]
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 6 },
-  show: { opacity: 1, y: 0 },
 }
 
 export function CategoryList({ categories, onEdit, onDelete }: CategoryListProps) {
@@ -33,9 +27,8 @@ export function CategoryList({ categories, onEdit, onDelete }: CategoryListProps
   const incomes = custom.filter((c) => c.type === "income")
 
   const renderCategory = (cat: Category, isDefault: boolean) => (
-    <motion.div
+    <div
       key={cat.id}
-      variants={itemVariants}
       className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50"
     >
       <div
@@ -68,7 +61,7 @@ export function CategoryList({ categories, onEdit, onDelete }: CategoryListProps
           </Button>
         </div>
       )}
-    </motion.div>
+    </div>
   )
 
   const renderDefaultCategory = (cat: Category) => renderCategory(cat, true)
@@ -79,42 +72,27 @@ export function CategoryList({ categories, onEdit, onDelete }: CategoryListProps
       {defaults.length > 0 && (
         <div>
           <h3 className="mb-3 text-sm font-medium text-muted-foreground">Default Categories</h3>
-          <motion.div
-            className="space-y-2"
-            variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.03 } } }}
-            initial="hidden"
-            animate="show"
-          >
+          <div className="animate-in-stagger-sm space-y-2">
             {defaults.map(renderDefaultCategory)}
-          </motion.div>
+          </div>
         </div>
       )}
 
       {expenses.length > 0 && (
         <div>
           <h3 className="mb-3 text-sm font-medium text-muted-foreground">My Expense Categories</h3>
-          <motion.div
-            className="space-y-2"
-            variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.03 } } }}
-            initial="hidden"
-            animate="show"
-          >
+          <div className="animate-in-stagger-sm space-y-2">
             {expenses.map(renderCustomCategory)}
-          </motion.div>
+          </div>
         </div>
       )}
 
       {incomes.length > 0 && (
         <div>
           <h3 className="mb-3 text-sm font-medium text-muted-foreground">My Income Categories</h3>
-          <motion.div
-            className="space-y-2"
-            variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.03 } } }}
-            initial="hidden"
-            animate="show"
-          >
+          <div className="animate-in-stagger-sm space-y-2">
             {incomes.map(renderCustomCategory)}
-          </motion.div>
+          </div>
         </div>
       )}
 

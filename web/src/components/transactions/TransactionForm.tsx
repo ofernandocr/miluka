@@ -1,19 +1,18 @@
-import { useState, useRef, useEffect, useCallback } from "react"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { FormActions } from "@/components/ui/FormActions"
-import type { Category, NewTransaction, NewRecurringTransaction, RecurringFrequency, Transaction, Wallet } from "@/lib/types"
-import { getCurrencySymbol } from "@/lib/utils"
-import { getFrequencyLabel } from "@/lib/recurring"
+import { useTransactionForm } from "@/hooks/useTransactionForm"
+import {
+  AmountField,
+  CategoryGridButtons,
+  CategorySelectField,
+  DateField,
+  DescriptionField,
+  RecurringField,
+  TypeButtons,
+  WalletSelect,
+} from "./TransactionFormFields"
+import type { Category, NewTransaction, NewRecurringTransaction, Transaction, Wallet } from "@/lib/types"
 
 interface TransactionFormProps {
   categories: Category[]
@@ -24,378 +23,70 @@ interface TransactionFormProps {
   onCreateRecurring?: (template: NewRecurringTransaction) => Promise<void>
 }
 
-type TxType = "expense" | "income"
-
-const FREQUENCIES: RecurringFrequency[] = ["monthly", "weekly", "quarterly", "yearly"]
-
 export function TransactionForm({ categories, wallets, initialData, onSubmit, onCancel, onCreateRecurring }: TransactionFormProps) {
-  const isEdit = !!initialData
+  const form = useTransactionForm({
+    initialData,
+    walletsLength: wallets.length,
+    firstWalletId: wallets[0]?.id,
+    onSubmit,
+    onCancel,
+    onCreateRecurring,
+  })
 
-  const [type, setType] = useState<TxType>(initialData?.type ?? "expense")
-  const [amount, setAmount] = useState(initialData ? String(initialData.amount) : "")
-  const [description, setDescription] = useState(initialData?.description ?? "")
-  const [categoryId, setCategoryId] = useState(initialData?.category_id ?? "")
-  const [walletId, setWalletId] = useState(initialData?.wallet_id ?? wallets[0]?.id ?? "")
-  const today = new Date()
-  const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
-  const [date, setDate] = useState(initialData?.date ?? localDate)
-  const [submitting, setSubmitting] = useState(false)
+  const selectedWallet = wallets.find((w) => w.id === form.walletId)
+  const filteredCategories = categories.filter((c) => c.type === form.type)
 
-  const [isRecurring, setIsRecurring] = useState(false)
-  const [frequency, setFrequency] = useState<RecurringFrequency>("monthly")
-  const [dayOfMonth, setDayOfMonth] = useState(() => Math.min(new Date().getDate(), 28))
-  const showDayOfMonth = frequency !== "weekly"
-
-  const amountRef = useRef<HTMLInputElement>(null)
-  const descRef = useRef<HTMLInputElement>(null)
-  const dateRef = useRef<HTMLInputElement>(null)
-
-  const selectedWallet = wallets.find((w) => w.id === walletId)
-  const filteredCategories = categories.filter((c) => c.type === type)
-  const skipWallet = wallets.length <= 1
-
-  const totalSteps = skipWallet ? 5 : 6
-  const [step, setStep] = useState(0)
-
-  const AMOUNT_STEP = skipWallet ? 1 : 2
-  const CATEGORY_STEP = skipWallet ? 2 : 3
-  const DESC_STEP = skipWallet ? 3 : 4
-  const DATE_STEP = skipWallet ? 4 : 5
-
-  const focusEl = useCallback((ref: React.RefObject<HTMLInputElement | null>) => {
-    setTimeout(() => ref.current?.focus(), 50)
-  }, [])
-
-  useEffect(() => {
-    if (isEdit) return
-    if (step === AMOUNT_STEP) focusEl(amountRef)
-    else if (step === DESC_STEP) focusEl(descRef)
-    else if (step === DATE_STEP) focusEl(dateRef)
-  }, [step, isEdit, focusEl, AMOUNT_STEP, DESC_STEP, DATE_STEP])
-
-  const goNext = useCallback(() => {
-    setStep((s) => Math.min(s + 1, totalSteps - 1))
-  }, [totalSteps])
-
-  const goBack = useCallback(() => {
-    setStep((s) => Math.max(s - 1, 0))
-  }, [])
-
-  const handleSubmit = async () => {
-    if (submitting) return
-    if (!categoryId || !amount || parseFloat(amount) <= 0) return
-    setSubmitting(true)
-    try {
-      await onSubmit({
-        type,
-        amount: Number(amount),
-        description: description || null,
-        category_id: categoryId,
-        wallet_id: walletId || null,
-        date,
-      })
-      if (isRecurring && onCreateRecurring) {
-        try {
-          await onCreateRecurring({
-            type,
-            amount: Number(amount),
-            description: description || null,
-            category_id: categoryId,
-            wallet_id: walletId || null,
-            frequency,
-            day_of_month: showDayOfMonth ? dayOfMonth : null,
-          })
-        } catch {
-          // Transaction already saved; recurring error is surfaced by the caller
-        }
-      }
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (isEdit) return
-    if (e.key === "Escape") {
-      e.preventDefault()
-      onCancel()
-      return
-    }
-    if (e.key !== "Enter") return
-    if (step === CATEGORY_STEP && !categoryId) return
-    if (step === AMOUNT_STEP && (!amount || parseFloat(amount) <= 0)) return
-    e.preventDefault()
-    if (step === totalSteps - 1) handleSubmit()
-    else goNext()
-  }, [isEdit, step, categoryId, amount, totalSteps, goNext, onCancel, AMOUNT_STEP, CATEGORY_STEP])
-
-  const handleAmountKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      if (!amount || parseFloat(amount) <= 0) return
-      e.preventDefault()
-      e.stopPropagation()
-      goNext()
-    }
-  }
-
-  const handleAmountBackspace = (e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && amount === "") {
-      e.preventDefault()
-      goBack()
-    }
-  }
-
-  const handleDescKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      e.stopPropagation()
-      goNext()
-    }
-    if (e.key === "Backspace" && description === "") {
-      e.preventDefault()
-      e.stopPropagation()
-      goBack()
-    }
-  }
-
-  const handleDateKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      e.stopPropagation()
-      handleSubmit()
-    }
-  }
-
-  const stepLabel = () => {
-    const labels = skipWallet
-      ? ["What type of transaction?", "How much?", "Category?", "Description? (optional)", "Date?"]
-      : ["What type of transaction?", "Which wallet?", "How much?", "Category?", "Description? (optional)", "Date?"]
-    return labels[step] ?? ""
-  }
-
-  const typeButtons = (size: "lg" | "sm" = "sm") => (
-    <div className="flex gap-2" role="radiogroup" aria-label="Transaction type">
-      <Button
-        type="button"
-        variant={type === "expense" ? "default" : "outline"}
-        size={size}
-        role="radio"
-        aria-checked={type === "expense"}
-        onClick={() => { setType("expense"); setCategoryId("") }}
-        className={size === "lg" ? "flex-1 py-8 text-base" : "flex-1"}
-      >
-        💸 Expense
-      </Button>
-      <Button
-        type="button"
-        variant={type === "income" ? "default" : "outline"}
-        size={size}
-        role="radio"
-        aria-checked={type === "income"}
-        onClick={() => { setType("income"); setCategoryId("") }}
-        className={size === "lg" ? "flex-1 py-8 text-base" : "flex-1"}
-      >
-        💰 Income
-      </Button>
-    </div>
-  )
-
-  const walletSelect = (large = false) => (
-    <div className="space-y-2">
-      <Label>Wallet</Label>
-      <Select value={walletId} onValueChange={setWalletId}>
-        <SelectTrigger aria-label="Select wallet" className={large ? "h-12 text-base" : ""}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {wallets.map((w) => (
-            <SelectItem key={w.id} value={w.id}>
-              <span className="flex items-center gap-2">
-                <span>{w.icon}</span>
-                <span>{w.name}</span>
-                <span className="text-muted-foreground">({w.currency})</span>
-              </span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  )
-
-  const amountField = (large = false) => (
-    <div className="space-y-2">
-      <Label htmlFor={large ? "amount-wizard" : "amount"}>Amount</Label>
-      <div className="relative">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-          {selectedWallet ? getCurrencySymbol(selectedWallet.currency) : "$"}
-        </span>
-        <Input
-          ref={large ? amountRef : undefined}
-          id={large ? "amount-wizard" : "amount"}
-          type="number"
-          step="0.01"
-          min="0"
-          placeholder="0.00"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          onKeyDown={large ? handleAmountKeyDown : undefined}
-          onKeyUp={large ? handleAmountBackspace : undefined}
-          required
-          className={large ? "h-12 text-lg" : ""}
-          style={{ paddingLeft: `${(selectedWallet ? getCurrencySymbol(selectedWallet.currency) : "$").length * 0.7 + 1.5}rem` }}
-          autoFocus={large}
-        />
-      </div>
-    </div>
-  )
-
-  const categoryGrid = (large = false) => (
-    <div className="space-y-2">
-      <Label>Category</Label>
-      <Select value={categoryId} onValueChange={setCategoryId} required>
-        <SelectTrigger aria-label="Select category" className={large ? "h-12 text-base" : ""}>
-          <SelectValue placeholder="Select category" />
-        </SelectTrigger>
-        <SelectContent>
-          {filteredCategories.map((cat) => (
-            <SelectItem key={cat.id} value={cat.id}>
-              <span className="flex items-center gap-2">
-                <span>{cat.icon}</span>
-                <span>{cat.name}</span>
-              </span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  )
-
-  const categoryGridButtons = () => (
-    <div className="space-y-3">
-      <Label>Category</Label>
-      <div className="grid max-h-[50vh] grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
-        {filteredCategories.map((cat) => (
-          <Button
-            key={cat.id}
-            type="button"
-            variant={categoryId === cat.id ? "default" : "outline"}
-            size="sm"
-            onClick={() => { setCategoryId(cat.id); setTimeout(goNext, 150) }}
-            className="flex h-auto flex-col gap-1 py-3 text-xs"
-          >
-            <span className="text-lg">{cat.icon}</span>
-            <span className="leading-tight">{cat.name}</span>
-          </Button>
-        ))}
-      </div>
-    </div>
-  )
-
-  const descriptionField = (large = false) => (
-    <div className="space-y-2">
-      <Label htmlFor={large ? "desc-wizard" : "description"}>Description (optional)</Label>
-      <Input
-        ref={large ? descRef : undefined}
-        id={large ? "desc-wizard" : "description"}
-        placeholder="Coffee, groceries, etc."
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        onKeyDown={large ? handleDescKeyDown : undefined}
-        className={large ? "h-12 text-base" : ""}
-        autoFocus={large}
-      />
-    </div>
-  )
-
-  const dateField = (large = false) => (
-    <div className="space-y-2">
-      <Label htmlFor={large ? "date-wizard" : "date"}>Date</Label>
-      <Input
-        ref={large ? dateRef : undefined}
-        id={large ? "date-wizard" : "date"}
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        onKeyDown={large ? handleDateKeyDown : undefined}
-        className={large ? "h-12 text-base" : ""}
-        required
-        autoFocus={large}
-      />
-    </div>
-  )
-
-  const recurringField = () => (
-    <div className="space-y-3 rounded-lg border p-3">
-      <button
-        type="button"
-        role="checkbox"
-        aria-checked={isRecurring}
-        onClick={() => setIsRecurring((v) => !v)}
-        className="flex w-full items-center gap-3 text-left"
-      >
-        <span
-          className={`flex h-5 w-5 items-center justify-center rounded border-2 text-xs ${
-            isRecurring ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground"
-          }`}
-        >
-          {isRecurring ? "✓" : ""}
-        </span>
-        <span className="text-sm font-medium">🔁 Make this a recurring template</span>
-      </button>
-
-      {isRecurring && (
-        <div className="space-y-3 pl-1">
-          <div className="space-y-2">
-            <Label>Frequency</Label>
-            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Frequency">
-              {FREQUENCIES.map((freq) => (
-                <Button
-                  key={freq}
-                  type="button"
-                  variant={frequency === freq ? "default" : "outline"}
-                  size="sm"
-                  role="radio"
-                  aria-checked={frequency === freq}
-                  onClick={() => setFrequency(freq)}
-                >
-                  {getFrequencyLabel(freq)}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {showDayOfMonth && (
-            <div className="space-y-2">
-              <Label>Day of Month</Label>
-              <Select value={String(dayOfMonth)} onValueChange={(v) => setDayOfMonth(Number(v))}>
-                <SelectTrigger aria-label="Select day of month">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
-                    <SelectItem key={d} value={String(d)}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
+  const {
+    isEdit,
+    type,
+    amount,
+    description,
+    categoryId,
+    walletId,
+    date,
+    submitting,
+    isRecurring,
+    frequency,
+    dayOfMonth,
+    showDayOfMonth,
+    amountRef,
+    descRef,
+    dateRef,
+    skipWallet,
+    totalSteps,
+    step,
+    AMOUNT_STEP,
+    CATEGORY_STEP,
+    DESC_STEP,
+    DATE_STEP,
+    goNext,
+    goBack,
+    handleSubmit,
+    handleKeyDown,
+    handleAmountKeyDown,
+    handleAmountBackspace,
+    handleDescKeyDown,
+    handleDateKeyDown,
+    canGoNext,
+    stepLabel,
+  } = form
 
   // ── Edit mode: classic form ──
   if (isEdit) {
     return (
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit() }} className="space-y-4">
-        {typeButtons()}
-        {wallets.length > 1 && walletSelect()}
-        {amountField()}
-        {categoryGrid()}
-        {descriptionField()}
-        {dateField()}
+        <TypeButtons type={type} onSelect={form.setType} />
+        {wallets.length > 1 && (
+          <WalletSelect wallets={wallets} walletId={walletId} onChange={form.setWalletId} />
+        )}
+        <AmountField amount={amount} onChange={form.setAmount} currency={selectedWallet?.currency ?? "MXN"} />
+        <CategorySelectField
+          categories={filteredCategories}
+          categoryId={categoryId}
+          onChange={form.setCategoryId}
+        />
+        <DescriptionField value={description} onChange={form.setDescription} />
+        <DateField value={date} onChange={form.setDate} />
         <FormActions onCancel={onCancel} submitting={submitting} isEdit />
       </form>
     )
@@ -421,15 +112,62 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
         ))}
       </div>
 
-      <p className="text-center text-sm text-muted-foreground">{stepLabel()}</p>
+      <p className="text-center text-sm text-muted-foreground">{stepLabel}</p>
 
-      {step === 0 && typeButtons("lg")}
-      {!skipWallet && step === 1 && walletSelect(true)}
-      {step === AMOUNT_STEP && amountField(true)}
-      {step === CATEGORY_STEP && categoryGridButtons()}
-      {step === DESC_STEP && descriptionField(true)}
-      {step === DATE_STEP && dateField(true)}
-      {step === DATE_STEP && onCreateRecurring && recurringField()}
+      {step === 0 && <TypeButtons type={type} onSelect={form.setType} size="lg" />}
+      {!skipWallet && step === 1 && (
+        <WalletSelect wallets={wallets} walletId={walletId} onChange={form.setWalletId} large />
+      )}
+      {step === AMOUNT_STEP && (
+        <AmountField
+          amount={amount}
+          onChange={form.setAmount}
+          currency={selectedWallet?.currency ?? "MXN"}
+          ref={amountRef}
+          large
+          onKeyDown={handleAmountKeyDown}
+          onKeyUp={handleAmountBackspace}
+        />
+      )}
+      {step === CATEGORY_STEP && (
+        <CategoryGridButtons
+          categories={filteredCategories}
+          categoryId={categoryId}
+          onSelect={(id) => {
+            form.setCategoryId(id)
+            setTimeout(goNext, 150)
+          }}
+        />
+      )}
+      {step === DESC_STEP && (
+        <DescriptionField
+          value={description}
+          onChange={form.setDescription}
+          ref={descRef}
+          large
+          onKeyDown={handleDescKeyDown}
+        />
+      )}
+      {step === DATE_STEP && (
+        <DateField
+          value={date}
+          onChange={form.setDate}
+          ref={dateRef}
+          large
+          onKeyDown={handleDateKeyDown}
+        />
+      )}
+      {step === DATE_STEP && onCreateRecurring && (
+        <RecurringField
+          isRecurring={isRecurring}
+          onToggle={() => form.setIsRecurring((v) => !v)}
+          frequency={frequency}
+          onFrequencyChange={form.setFrequency}
+          dayOfMonth={dayOfMonth}
+          onDayOfMonthChange={form.setDayOfMonth}
+          showDayOfMonth={showDayOfMonth}
+        />
+      )}
 
       {/* Navigation */}
       <div className="flex items-center justify-between pt-2">
@@ -450,15 +188,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
               {submitting ? "Saving..." : "Create"}
             </Button>
           ) : (
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => {
-                if (step === AMOUNT_STEP && (!amount || parseFloat(amount) <= 0)) return
-                if (step === CATEGORY_STEP && !categoryId) return
-                goNext()
-              }}
-            >
+            <Button type="button" size="sm" onClick={goNext} disabled={!canGoNext()}>
               Next
             </Button>
           )}

@@ -9,6 +9,7 @@ miluka/
 ├── AGENTS.md                 # Agent instructions (start here)
 ├── REQUIREMENTS.md           # Feature requirements
 ├── ARCHITECTURE.md           # This file — architecture reference
+├── BUDGETS.md                # Budgets module guide (schema, data flow, pure functions)
 │
 ├── sql/                      # Database migrations (applied via psql)
 │   ├── 000_supabase_cloud_init.sql  # Combined migration for Supabase Cloud (idempotent)
@@ -52,15 +53,16 @@ miluka/
         │   ├── useCategories.ts  # Category CRUD
         │   ├── useRecurringTransactions.ts # Recurring CRUD + auto-generation
         │   ├── useTheme.ts   # Theme management (system/light/dark, localStorage)
+        │   ├── useTransactionForm.ts # TransactionForm state machine (type/amount/category/description/date + recurring, step navigation, keyboard handlers)
         │   ├── useTransactions.ts # Transaction CRUD (+ category, wallet join)
         │   └── useWallets.ts  # Wallet CRUD
         ├── components/
         │   ├── layout/       # Sidebar, BottomNav, ProtectedRoute
         │   ├── ui/           # shadcn/ui primitives (button, card, dialog, ThemeToggle, FloatingActionButton)
-        │   ├── budgets/      # BudgetForm, BudgetList
-        │   ├── recurring/    # RecurringForm, RecurringList, RecurringOverdueBanner, UpcomingRecurringSection
+        │   ├── budgets/      # BudgetForm, BudgetList (BudgetCard)
+        │   ├── recurring/    # RecurringForm, RecurringList (RecurringCard), RecurringOverdueBanner, UpcomingRecurringSection
         │   ├── categories/   # CategoryList, CategoryForm
-        │   ├── transactions/ # TransactionList, TransactionForm, TransactionItem, CsvImportDialog
+        │   ├── transactions/ # TransactionList, TransactionForm, TransactionFormFields, TransactionItem, CsvImportDialog
         │   ├── dashboard/    # TimeRangeToggle, WalletSummaryCards, SpendingByCategoryList
         │   ├── exports/      # ExportSection (CSV/JSON export)
         │   └── wallets/      # WalletList, WalletForm
@@ -170,9 +172,11 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 - Edit mode renders the classic single-page form and never shows the recurring checkbox
 
 ### Animations
-- `motion` library (Framer Motion v11) for stagger, layout, and gesture animations
-- Staggered list entries (0.03-0.06s delay per item)
-- Hover/tap effects on cards and interactive elements
+- CSS-only animations in `index.css` (keyframes + nth-child stagger delays); the `motion` dependency was removed (~125 kB raw / ~41 kB gzip bundle savings)
+- Staggered list entries via `.animate-in-stagger` (40ms) and `.animate-in-stagger-sm` (30ms) container classes
+- FAB backdrop/menu fade via `.animate-fade-in` / `.animate-fade-in-up`
+- Progress bar width animation via `.transition-width` + `requestAnimationFrame` in `AnimatedBar` (`SpendingByCategoryList`)
+- Hover/tap effects on cards and interactive elements via Tailwind `transition-*` utilities
 - `prefers-reduced-motion` media query respected for accessibility
 
 ## Formatting Utilities (`web/src/lib/utils.ts`)

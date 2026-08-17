@@ -1,6 +1,5 @@
 import { useMemo } from "react"
 import { Receipt } from "lucide-react"
-import { motion } from "motion/react"
 import { TransactionItem } from "./TransactionItem"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { getCurrencySymbol } from "@/lib/utils"
@@ -54,16 +53,6 @@ function groupByWallet(
   return result
 }
 
-const groupVariants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.04 } },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0 },
-}
-
 export function TransactionList({ transactions, wallets, onEdit, onDelete }: TransactionListProps) {
   const groups = useMemo(() => groupByWallet(transactions, wallets), [transactions, wallets])
 
@@ -78,18 +67,12 @@ export function TransactionList({ transactions, wallets, onEdit, onDelete }: Tra
   }
 
   return (
-    <motion.div
-      className="space-y-4"
-      variants={groupVariants}
-      initial="hidden"
-      animate="show"
-    >
+    <div className="animate-in-stagger space-y-4">
       {groups.map((group) => {
         const currency = group.wallet?.currency ?? "MXN"
         return (
-          <motion.div
+          <div
             key={group.wallet?.id ?? "__none__"}
-            variants={itemVariants}
             className="rounded-xl border bg-card/50 overflow-hidden transition-shadow hover:shadow-elevated"
           >
             <div className="flex items-center justify-between border-b bg-card px-4 py-3">
@@ -132,9 +115,9 @@ export function TransactionList({ transactions, wallets, onEdit, onDelete }: Tra
                 />
               ))}
             </div>
-          </motion.div>
+          </div>
         )
       })}
-    </motion.div>
+    </div>
   )
 }

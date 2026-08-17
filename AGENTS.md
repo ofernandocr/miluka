@@ -4,6 +4,7 @@
 - `REQUIREMENTS.md` — full feature definitions
 - `ARCHITECTURE.md` — project structure, data model, and design decisions
 - `DEPLOY.md` — production deployment guide (Supabase Cloud + Cloudflare Pages)
+- `BUDGETS.md` — budgets module guide (schema, data flow, pure functions)
 - Keep all documentation updated when making changes
 
 ## Stack

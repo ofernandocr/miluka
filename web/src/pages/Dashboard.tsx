@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { BarChart3 } from "lucide-react"
-import { motion } from "motion/react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
@@ -30,19 +29,8 @@ import { computeBudgetSpent } from "@/lib/budgets"
 import { filterByTimeRange, buildUnifiedCategories, computeWalletSummaries } from "@/lib/dashboard"
 import { getUpcomingRecurring } from "@/lib/recurring"
 import { getCurrencySymbol } from "@/lib/utils"
-
 import type { NewTransaction, Budget } from "@/lib/types"
 import type { TimeRange } from "@/lib/dashboard"
-
-const stagger = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
-}
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } },
-}
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -144,14 +132,14 @@ export default function Dashboard() {
         />
       )}
 
-      <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
+      <div className="animate-in-stagger space-y-6">
         {visibleSummaries.map((summary) => {
           const totalExpense = summary.categoryData.reduce((s, c) => s + c.value, 0)
           const budgetsForWallet = walletBudgets.get(summary.wallet.id) ?? []
           const unified = buildUnifiedCategories(summary.categoryData, budgetsForWallet, totalExpense)
 
           return (
-            <motion.div key={summary.wallet.id} variants={fadeUp} className="space-y-4">
+            <div key={summary.wallet.id} className="animate-fade-up space-y-4">
               {/* Wallet Header */}
               <div className="flex items-center gap-3">
                 <div
@@ -195,10 +183,10 @@ export default function Dashboard() {
                   Manage budgets →
                 </button>
               )}
-            </motion.div>
+            </div>
           )
         })}
-      </motion.div>
+      </div>
 
       <UpcomingRecurringSection recurring={upcomingRecurring} />
 

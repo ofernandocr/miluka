@@ -1,9 +1,30 @@
-import { motion } from "motion/react"
+import { useEffect, useRef, useState } from "react"
 import type { UnifiedCategoryItem } from "@/lib/dashboard"
 
 interface SpendingByCategoryListProps {
   unified: UnifiedCategoryItem[]
   onCategoryClick: (id: string) => void
+}
+
+function AnimatedBar({ width, color }: { width: string; color: string }) {
+  const [displayWidth, setDisplayWidth] = useState("0%")
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    rafRef.current = requestAnimationFrame(() => {
+      setDisplayWidth(width)
+    })
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
+    }
+  }, [width])
+
+  return (
+    <div
+      className="h-full rounded-full transition-width"
+      style={{ backgroundColor: color, width: displayWidth }}
+    />
+  )
 }
 
 export function SpendingByCategoryList({ unified, onCategoryClick }: SpendingByCategoryListProps) {
@@ -12,12 +33,7 @@ export function SpendingByCategoryList({ unified, onCategoryClick }: SpendingByC
   return (
     <div className="rounded-2xl border bg-card p-4 transition-shadow hover:shadow-elevated">
       <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Spending by Category</h3>
-      <motion.div
-        className="space-y-2"
-        variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } }}
-        initial="hidden"
-        animate="show"
-      >
+      <div className="animate-in-stagger-sm space-y-2">
         {unified.map((cat) => {
           const hasBudget = cat.budgetAmount !== null
           const barPct = hasBudget ? cat.budgetPct! : 0
@@ -42,9 +58,8 @@ export function SpendingByCategoryList({ unified, onCategoryClick }: SpendingByC
             : null
 
           return (
-            <motion.button
+            <button
               key={cat.id}
-              variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}
               onClick={() => onCategoryClick(cat.id)}
               className="group flex w-full items-center gap-3 rounded-xl bg-secondary/50 p-3 text-left transition-colors hover:bg-secondary/80"
             >
@@ -67,19 +82,13 @@ export function SpendingByCategoryList({ unified, onCategoryClick }: SpendingByC
                 </p>
 
                 <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-secondary">
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: barBg }}
-                    initial={{ width: 0 }}
-                    animate={{ width: barWidth }}
-                    transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" as const }}
-                  />
+                  <AnimatedBar width={barWidth} color={barBg} />
                 </div>
               </div>
-            </motion.button>
+            </button>
           )
         })}
-      </motion.div>
+      </div>
     </div>
   )
 }

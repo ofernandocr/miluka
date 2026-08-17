@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatDate } from "@/lib/utils"
@@ -9,7 +10,7 @@ interface TransactionItemProps {
   onDelete: (id: string) => void
 }
 
-export function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps) {
+export const TransactionItem = memo(function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps) {
   const isExpense = transaction.type === "expense"
   const currency = transaction.wallet?.currency ?? "MXN"
 
@@ -48,4 +49,4 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
       </div>
     </div>
   )
-}
+})

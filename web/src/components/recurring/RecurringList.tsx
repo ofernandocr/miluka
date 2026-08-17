@@ -1,5 +1,5 @@
+import { memo } from "react"
 import { Pencil, Trash2, Pause, Play, Repeat, Plus } from "lucide-react"
-import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/EmptyState"
@@ -15,19 +15,14 @@ interface RecurringListProps {
   onGenerateFromTemplate: (item: RecurringTransaction) => void
 }
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 6 },
-  show: { opacity: 1, y: 0 },
-}
-
-function RecurringCard({ item, onEdit, onDelete, onToggleActive, onGenerateFromTemplate }: { item: RecurringTransaction } & Pick<RecurringListProps, "onEdit" | "onDelete" | "onToggleActive" | "onGenerateFromTemplate">) {
+const RecurringCard = memo(function RecurringCard({ item, onEdit, onDelete, onToggleActive, onGenerateFromTemplate }: { item: RecurringTransaction } & Pick<RecurringListProps, "onEdit" | "onDelete" | "onToggleActive" | "onGenerateFromTemplate">) {
   const currency = item.wallet?.currency ?? "MXN"
   const icon = item.category?.icon ?? "🔄"
   const name = item.category?.name ?? "Recurring"
   const overdue = isDueOrOverdue(item.next_due_date)
 
   return (
-    <motion.div variants={itemVariants} className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50">
+    <div className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50">
       <div
         className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-lg"
         style={{ backgroundColor: (item.category?.color ?? "#6b7280") + "20" }}
@@ -97,9 +92,9 @@ function RecurringCard({ item, onEdit, onDelete, onToggleActive, onGenerateFromT
           </span>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
-}
+})
 
 export function RecurringList({ recurring, onEdit, onDelete, onToggleActive, onGenerateFromTemplate }: RecurringListProps) {
   const active = recurring.filter((r) => r.is_active)
@@ -123,15 +118,11 @@ export function RecurringList({ recurring, onEdit, onDelete, onToggleActive, onG
           <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <motion.div
-            variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }}
-            initial="hidden"
-            animate="show"
-          >
+          <div className="animate-in-stagger-sm space-y-2">
             {items.map((r) => (
               <RecurringCard key={r.id} item={r} onEdit={onEdit} onDelete={onDelete} onToggleActive={onToggleActive} onGenerateFromTemplate={onGenerateFromTemplate} />
             ))}
-          </motion.div>
+          </div>
         </CardContent>
       </Card>
     )
