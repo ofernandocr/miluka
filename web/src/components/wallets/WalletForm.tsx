@@ -11,6 +11,7 @@ import {
 import { IconPicker } from "@/components/ui/IconPicker"
 import { ColorPicker } from "@/components/ui/ColorPicker"
 import { FormActions } from "@/components/ui/FormActions"
+import { useProfile } from "@/providers/ProfileProvider"
 import { CURRENCIES } from "@/lib/utils"
 import type { NewWallet, Wallet } from "@/lib/types"
 
@@ -24,8 +25,9 @@ interface WalletFormProps {
 }
 
 export function WalletForm({ initialData, onSubmit, onCancel }: WalletFormProps) {
+  const { currency: defaultCurrency } = useProfile()
   const [name, setName] = useState(initialData?.name ?? "")
-  const [currency, setCurrency] = useState(initialData?.currency ?? "MXN")
+  const [currency, setCurrency] = useState(initialData?.currency ?? defaultCurrency)
   const [icon, setIcon] = useState(initialData?.icon ?? "💼")
   const [color, setColor] = useState(initialData?.color ?? "#6b7280")
   const [submitting, setSubmitting] = useState(false)

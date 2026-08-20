@@ -18,11 +18,13 @@ export function Sidebar() {
     localStorage.setItem("sidebar-collapsed", String(next))
   }
 
+  const isSettingsActive = pathname.startsWith("/settings")
+
   return (
     <aside
       className={cn(
         "fixed left-0 top-0 z-40 hidden h-screen flex-col border-r bg-sidebar text-sidebar-foreground transition-all duration-300 lg:flex",
-        collapsed ? "w-[64px]" : "w-[240px]"
+        collapsed ? "w-[128px]" : "w-[240px]"
       )}
     >
       {/* Header */}
@@ -47,12 +49,12 @@ export function Sidebar() {
                 active
                   ? "bg-primary/10 text-primary"
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                collapsed && "justify-center px-0"
+                collapsed && "justify-center"
               )}
-              title={collapsed ? label : undefined}
+              title={label}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>{label}</span>}
+              <span>{label}</span>
             </Link>
           )
         })}
@@ -62,17 +64,18 @@ export function Sidebar() {
       <div className="space-y-1 border-t px-2 py-3">
         <Link
           to="/settings"
+          aria-current={isSettingsActive ? "page" : undefined}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-            pathname === "/settings"
+            isSettingsActive
               ? "bg-primary/10 text-primary"
               : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-            collapsed && "justify-center px-0"
+            collapsed && "justify-center"
           )}
-          title={collapsed ? "Settings" : undefined}
+          title="Settings"
         >
           <Settings className="h-4 w-4 shrink-0" />
-          {!collapsed && <span>Settings</span>}
+          <span>Settings</span>
         </Link>
 
         {!collapsed && (

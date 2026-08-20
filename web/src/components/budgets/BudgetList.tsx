@@ -3,6 +3,7 @@ import { Pencil, Trash2, PiggyBank } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/EmptyState"
+import { useProfile } from "@/providers/ProfileProvider"
 import type { Budget } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
 import { getProgressColor, getProgressTextColor, getPeriodLabel } from "@/lib/budgets"
@@ -18,9 +19,10 @@ interface BudgetListProps {
 }
 
 const BudgetCard = memo(function BudgetCard({ budget, onEdit, onDelete }: { budget: BudgetWithSpent } & Pick<BudgetListProps, "onEdit" | "onDelete">) {
+  const { currency: defaultCurrency } = useProfile()
   const pct = budget.amount > 0 ? (budget.spent / budget.amount) * 100 : 0
   const remaining = budget.amount - budget.spent
-  const currency = budget.wallet?.currency ?? "MXN"
+  const currency = budget.wallet?.currency ?? defaultCurrency
 
   const icon = budget.category?.icon ?? budget.wallet?.icon ?? "📊"
   const name = budget.category

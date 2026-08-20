@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { FormActions } from "@/components/ui/FormActions"
+import { useProfile } from "@/providers/ProfileProvider"
 import type { RecurringTransaction, NewRecurringTransaction, Category, Wallet, RecurringFrequency, TransactionType } from "@/lib/types"
 import { getCurrencySymbol } from "@/lib/utils"
 import { getFrequencyLabel } from "@/lib/recurring"
@@ -25,6 +26,7 @@ interface RecurringFormProps {
 const FREQUENCIES: RecurringFrequency[] = ["monthly", "weekly", "quarterly", "yearly"]
 
 export function RecurringForm({ categories, wallets, initialData, onSubmit, onCancel }: RecurringFormProps) {
+  const { currency: defaultCurrency } = useProfile()
   const [type, setType] = useState<TransactionType>(initialData?.type ?? "expense")
   const [amount, setAmount] = useState(initialData ? String(initialData.amount) : "")
   const [description, setDescription] = useState(initialData?.description ?? "")
@@ -36,7 +38,7 @@ export function RecurringForm({ categories, wallets, initialData, onSubmit, onCa
 
   const filteredCategories = categories.filter((c) => c.type === type)
   const selectedWallet = wallets.find((w) => w.id === walletId)
-  const currency = selectedWallet?.currency ?? wallets[0]?.currency ?? "MXN"
+  const currency = selectedWallet?.currency ?? wallets[0]?.currency ?? defaultCurrency
   const showDayOfMonth = frequency !== "weekly"
 
   const handleSubmit = async (e: React.FormEvent) => {

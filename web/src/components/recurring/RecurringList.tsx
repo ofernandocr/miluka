@@ -3,6 +3,7 @@ import { Pencil, Trash2, Pause, Play, Repeat, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/EmptyState"
+import { useProfile } from "@/providers/ProfileProvider"
 import type { RecurringTransaction } from "@/lib/types"
 import { formatCurrency } from "@/lib/utils"
 import { getScheduleDescription, isDueOrOverdue } from "@/lib/recurring"
@@ -16,7 +17,8 @@ interface RecurringListProps {
 }
 
 const RecurringCard = memo(function RecurringCard({ item, onEdit, onDelete, onToggleActive, onGenerateFromTemplate }: { item: RecurringTransaction } & Pick<RecurringListProps, "onEdit" | "onDelete" | "onToggleActive" | "onGenerateFromTemplate">) {
-  const currency = item.wallet?.currency ?? "MXN"
+  const { currency: defaultCurrency } = useProfile()
+  const currency = item.wallet?.currency ?? defaultCurrency
   const icon = item.category?.icon ?? "🔄"
   const name = item.category?.name ?? "Recurring"
   const overdue = isDueOrOverdue(item.next_due_date)

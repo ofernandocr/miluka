@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { Receipt } from "lucide-react"
 import { TransactionItem } from "./TransactionItem"
 import { EmptyState } from "@/components/ui/EmptyState"
+import { useProfile } from "@/providers/ProfileProvider"
 import { getCurrencySymbol } from "@/lib/utils"
 import type { Transaction, Wallet } from "@/lib/types"
 
@@ -55,6 +56,7 @@ function groupByWallet(
 
 export function TransactionList({ transactions, wallets, onEdit, onDelete }: TransactionListProps) {
   const groups = useMemo(() => groupByWallet(transactions, wallets), [transactions, wallets])
+  const { currency: defaultCurrency } = useProfile()
 
   if (transactions.length === 0) {
     return (
@@ -69,7 +71,7 @@ export function TransactionList({ transactions, wallets, onEdit, onDelete }: Tra
   return (
     <div className="animate-in-stagger space-y-4">
       {groups.map((group) => {
-        const currency = group.wallet?.currency ?? "MXN"
+        const currency = group.wallet?.currency ?? defaultCurrency
         return (
           <div
             key={group.wallet?.id ?? "__none__"}

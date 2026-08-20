@@ -2,6 +2,7 @@ import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { BarChart3 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
+import { useProfile } from "@/providers/ProfileProvider"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
 import { useWallets } from "@/hooks/useWallets"
@@ -34,6 +35,7 @@ import type { Period } from "@/lib/dashboard"
 
 export default function Dashboard() {
   const { user } = useAuth()
+  const { currency: defaultCurrency } = useProfile()
   const { transactions, loading, createTransaction } = useTransactions(user?.id)
   const { categories } = useCategories(user?.id)
   const { wallets } = useWallets(user?.id)
@@ -188,7 +190,7 @@ export default function Dashboard() {
 
                 {budgetsForWallet.length > 0 && (
                   <button
-                    onClick={() => navigate("/budgets")}
+                    onClick={() => navigate("/settings/budgets")}
                     className="w-full rounded-lg border border-dashed py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
                   >
                     Manage budgets →
@@ -217,7 +219,7 @@ export default function Dashboard() {
       <QuickAddDialog
         open={!!quickCategory}
         category={quickCategory}
-        currency={wallets[0]?.currency ?? "MXN"}
+        currency={wallets[0]?.currency ?? defaultCurrency}
         onOpenChange={(open) => { if (!open) setQuickCategory(null) }}
         onConfirm={handleQuickAdd}
       />

@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FormActions } from "@/components/ui/FormActions"
+import { useProfile } from "@/providers/ProfileProvider"
 import { useTransactionForm } from "@/hooks/useTransactionForm"
 import {
   AmountField,
@@ -24,6 +25,7 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ categories, wallets, initialData, onSubmit, onCancel, onCreateRecurring }: TransactionFormProps) {
+  const { currency: defaultCurrency } = useProfile()
   const form = useTransactionForm({
     initialData,
     walletsLength: wallets.length,
@@ -79,7 +81,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
         {wallets.length > 1 && (
           <WalletSelect wallets={wallets} walletId={walletId} onChange={form.setWalletId} />
         )}
-        <AmountField amount={amount} onChange={form.setAmount} currency={selectedWallet?.currency ?? "MXN"} />
+        <AmountField amount={amount} onChange={form.setAmount} currency={selectedWallet?.currency ?? defaultCurrency} />
         <CategorySelectField
           categories={filteredCategories}
           categoryId={categoryId}
@@ -117,7 +119,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
         <AmountField
           amount={amount}
           onChange={form.setAmount}
-          currency={selectedWallet?.currency ?? "MXN"}
+          currency={selectedWallet?.currency ?? defaultCurrency}
           ref={amountRef}
           large
           onKeyDown={handleAmountKeyDown}

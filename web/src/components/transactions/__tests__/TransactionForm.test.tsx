@@ -3,6 +3,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { TransactionForm } from "@/components/transactions/TransactionForm"
 import type { Category, Wallet, NewTransaction, NewRecurringTransaction } from "@/lib/types"
 
+vi.mock("@/providers/ProfileProvider", () => ({
+  useProfile: () => ({ currency: "MXN", setCurrency: vi.fn() }),
+}))
+
 const category: Category = {
   id: "c1",
   name: "Food",

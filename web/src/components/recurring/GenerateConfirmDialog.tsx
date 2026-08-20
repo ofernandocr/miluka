@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { useProfile } from "@/providers/ProfileProvider"
 import type { RecurringTransaction } from "@/lib/types"
 import { getCurrencySymbol } from "@/lib/utils"
 
@@ -14,6 +15,7 @@ interface GenerateConfirmDialogProps {
 }
 
 export function GenerateConfirmDialog({ open, item, onOpenChange, onConfirm }: GenerateConfirmDialogProps) {
+  const { currency: defaultCurrency } = useProfile()
   const [amount, setAmount] = useState("")
   const today = new Date()
   const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
@@ -39,7 +41,7 @@ export function GenerateConfirmDialog({ open, item, onOpenChange, onConfirm }: G
     }
   }
 
-  const currency = item?.wallet?.currency ?? "MXN"
+  const currency = item?.wallet?.currency ?? defaultCurrency
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

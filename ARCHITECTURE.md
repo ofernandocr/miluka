@@ -42,6 +42,7 @@ miluka/
         ├── App.tsx           # Router + responsive layout (Sidebar desktop / BottomNav mobile)
         ├── main.tsx          # Entry point
         ├── index.css         # Global styles (Light + Dark themes, surface tokens, transitions)
+        ├── providers/         # AuthProvider, ProfileProvider (default currency context)
         ├── lib/
         │   ├── supabase.ts   # Supabase client (Kong URL)
         │   ├── types.ts      # TypeScript interfaces
@@ -66,7 +67,7 @@ miluka/
         │   ├── dashboard/    # PeriodSelector, WalletSummaryCards, SpendingByCategoryList
         │   ├── exports/      # ExportSection (CSV/JSON export)
         │   └── wallets/      # WalletList, WalletForm
-        └── pages/            # Route pages (Login, Register, Dashboard, Transactions, Categories, Wallets, Budgets, Recurring, Settings)
+        └── pages/            # Route pages (Login, Register, Dashboard, Transactions, Recurring, Settings + /settings/{categories,wallets,budgets} sub-routes)
 ```
 
 ## Data Model
@@ -88,7 +89,7 @@ miluka/
 - `transactions.type IN ('expense', 'income')`
 - `budgets(user_id, COALESCE(category_id,''), COALESCE(wallet_id,''))` — one budget per user/category/wallet combination
 - `recurring_transactions(user_id, category_id, COALESCE(wallet_id,''), frequency)` — one template per user/category/wallet/frequency
-- `profiles.currency` is kept for backwards compatibility; wallets table is the source of truth for transaction currency
+- `profiles.currency` is the user's selectable default currency (Settings → Preferences); it is used wherever a wallet does not specify a currency (quick-add, list/amount display fallback, and as the default for new wallets)
 
 ### Default Wallet
 - Created automatically via trigger `on_auth_user_created`
@@ -131,6 +132,7 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 
 - No global state store (Redux, Zustand, etc.)
 - Auth state shared via `AuthProvider` context (single subscription)
+- Default currency shared via `ProfileProvider` context (loads `profiles.currency`, exposes `setCurrency`); consumed with `useProfile()` across pages and display components
 - CRUD hooks (`useTransactions`, `useCategories`, `useWallets`, `useBudgets`, `useRecurringTransactions`) each manage their own state and refetch on mutation
 - `useQuickAdd` hook encapsulates the shared quick-add FAB + dialog pattern used by Dashboard and Transactions (category ranking, quick-add handler, recurring template handler)
 - `useRecurringTransactions` includes a `useRef` guard to prevent the auto-generate RPC from looping if the server fails to advance `next_due_date`
@@ -165,8 +167,10 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 - All colors defined as CSS variables in `index.css` with dark mode overrides
 
 ### Navigation
-- **Desktop (≥1024px):** Collapsible sidebar (240px expanded / 64px collapsed)
-- **Mobile (<1024px):** Bottom tab bar + floating action button (FAB)
+- **Desktop (≥1024px):** Collapsible sidebar (240px expanded / 128px collapsed); nav labels stay visible in both states
+- **Mobile (<1024px):** Bottom tab bar with Dashboard, Transactions, Recurring, and Settings + floating action button (FAB)
+- Main nav holds Dashboard, Transactions, Recurring; Categories, Wallets, and Budgets live under **Settings** (`/settings/categories`, `/settings/wallets`, `/settings/budgets`) to keep the navbar lean
+- Settings links in the Sidebar and BottomNav stay active for `/settings/*` sub-routes
 - FAB (`QuickAddFab`) shows a `+` icon when closed; when tapped, expands to a pill showing `+ New` and deploys an animated vertical stack of category shortcuts (top 4 most-used expense categories); each shortcut shows the category name to the left and a tinted circle with the icon to the right; backdrop blurs the background while the menu is open; a second tap on the FAB opens the full "New Transaction" form; available on all screen sizes
 - Sidebar persists state in `localStorage`
 
@@ -209,13 +213,14 @@ The page shows:
   - Categories with budget: budget progress bar (spent/budget) with color coding (green/yellow/orange/red), evaluated against the selected month
   - Categories without budget: percentage of total spending bar using category color
   - Sorted highest to lowest by amount
-  - "Manage budgets →" link at bottom (only when budgets exist)
+  - "Manage budgets →" link at bottom (only when budgets exist), navigating to `/settings/budgets`
   - In All time mode budget bars are suppressed with a "Budgets are monthly" hint
   - The spending list scrolls vertically (`max-h-[30rem] overflow-y-auto`) when a wallet has more than 8 categories, keeping the block compact
 
 When a specific wallet is selected via dropdown, only that wallet's section is shown.
 
-Transactions page supports URL-based filters via `useSearchParams`: `?category=<id>` and `?type=<expense|income>`.
+Transactions page supports URL-based filters via `useSearchParams`: `?category=<id>`, `?q=<text>`, and `?type=<income|expense|income,expense>`.
+- The filter toolbar sits at the top of the page, one row at the same height: a **magnifier** icon that expands into a search input when clicked (X closes and clears it), **Income**/**Expenses** as independent toggle buttons (tapping the active one clears it back to "All"), and a **Categories** dropdown; a Clear button and result count appear only while a filter is active.
 
 ## Testing
 
@@ -223,7 +228,7 @@ Transactions page supports URL-based filters via `useSearchParams`: `?category=<
 |------|------|----------|----------|
 | Unit (lib) | Vitest | `src/lib/__tests__/` | utils (17), quickAdd (5), recurring (15), csv (13), dashboard (all functions including buildUnifiedCategories, filterByPeriod), budgets (22) |
 | Component | Vitest + RTL | `src/components/**/__tests__/` | TransactionForm (wizard flow, recurring checkbox, keyboard nav, error resilience), QuickAddDialog (validation, submit), TransactionList (grouping, interactions, empty state) |
-| Page (logic) | Vitest | `src/pages/__tests__/` | Dashboard pure functions (imported from lib/dashboard.ts) |
+| Page (logic) | Vitest | `src/pages/__tests__/` | Dashboard pure functions (imported from lib/dashboard.ts), Transactions filter toolbar (magnifier, Income/Expenses toggles, search), Settings (currency select, hidden User ID, manage links) |
 
 ## Deployment Architecture
 

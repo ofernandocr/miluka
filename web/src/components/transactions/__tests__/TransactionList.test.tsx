@@ -3,6 +3,10 @@ import { render, screen } from "@testing-library/react"
 import { TransactionList } from "../TransactionList"
 import type { Transaction, Wallet } from "@/lib/types"
 
+vi.mock("@/providers/ProfileProvider", () => ({
+  useProfile: () => ({ currency: "MXN", setCurrency: vi.fn() }),
+}))
+
 const mockWallets: Wallet[] = [
   { id: "w1", user_id: "u1", name: "General", currency: "MXN", icon: "💼", color: "#6b7280", created_at: "2026-01-01T00:00:00Z" },
   { id: "w2", user_id: "u1", name: "Savings", currency: "USD", icon: "🏦", color: "#3b82f6", created_at: "2026-01-01T00:00:00Z" },

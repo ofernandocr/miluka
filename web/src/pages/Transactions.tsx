@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
-import { Filter, X, Search } from "lucide-react"
+import { X, Search } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
+import { useProfile } from "@/providers/ProfileProvider"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
 import { useWallets } from "@/hooks/useWallets"
@@ -26,6 +27,7 @@ import type { NewTransaction } from "@/lib/types"
 
 export default function Transactions() {
   const { user } = useAuth()
+  const { currency: defaultCurrency } = useProfile()
   const { transactions, loading, createTransaction, updateTransaction, deleteTransaction } =
     useTransactions(user?.id)
   const { categories } = useCategories(user?.id)
@@ -47,12 +49,15 @@ export default function Transactions() {
   const categoryFilter = searchParams.get("category") ?? ""
   const typeFilter = searchParams.get("type") ?? ""
   const queryFilter = searchParams.get("q") ?? ""
+  const selectedTypes = typeFilter ? typeFilter.split(",") : []
+  const hasTypeFilter = selectedTypes.length === 1
+  const [searchOpen, setSearchOpen] = useState(() => queryFilter !== "")
 
   const filteredTransactions = useMemo(() => {
     const q = queryFilter.toLowerCase()
     return transactions.filter((t) => {
       if (categoryFilter && t.category_id !== categoryFilter) return false
-      if (typeFilter && t.type !== typeFilter) return false
+      if (hasTypeFilter && t.type !== selectedTypes[0]) return false
       if (q) {
         const desc = t.description?.toLowerCase() ?? ""
         const amount = String(t.amount)
@@ -60,7 +65,7 @@ export default function Transactions() {
       }
       return true
     })
-  }, [transactions, categoryFilter, typeFilter, queryFilter])
+  }, [transactions, categoryFilter, hasTypeFilter, selectedTypes, queryFilter])
 
   const activeFilterCategory = categories.find((c) => c.id === categoryFilter)
 
@@ -80,16 +85,24 @@ export default function Transactions() {
 
   const setTypeFilter = (value: string) => {
     const params = new URLSearchParams(searchParams)
-    if (value && value !== "all") params.set("type", value)
+    if (value) params.set("type", value)
     else params.delete("type")
     setSearchParams(params)
   }
 
-  const clearFilters = () => {
-    setSearchParams({})
+  const toggleType = (value: "income" | "expense") => {
+    const current = new Set(typeFilter ? typeFilter.split(",") : [])
+    if (current.has(value)) current.delete(value)
+    else current.add(value)
+    setTypeFilter(Array.from(current).sort().join(","))
   }
 
-  const hasFilters = categoryFilter || typeFilter || queryFilter
+  const clearFilters = () => {
+    setSearchParams({})
+    setSearchOpen(false)
+  }
+
+  const hasFilters = hasTypeFilter || !!categoryFilter || !!queryFilter
 
   const handleCreate = async (data: NewTransaction) => {
     await createTransaction(data)
@@ -125,32 +138,61 @@ export default function Transactions() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Filter className="h-4 w-4 text-muted-foreground" />
+        {searchOpen ? (
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search..."
+              aria-label="Search transactions"
+              value={queryFilter}
+              onChange={(e) => setQueryFilter(e.target.value)}
+              className="h-9 w-44 pl-8 pr-8 text-sm"
+              autoFocus
+            />
+            <button
+              onClick={() => {
+                setQueryFilter("")
+                setSearchOpen(false)
+              }}
+              aria-label="Close search"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9"
+            aria-label="Open search"
+            onClick={() => setSearchOpen(true)}
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+        )}
 
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search..."
-            aria-label="Search transactions"
-            value={queryFilter}
-            onChange={(e) => setQueryFilter(e.target.value)}
-            className="h-9 w-44 pl-8 text-sm"
-          />
-        </div>
-
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-32" aria-label="Filter by type">
-            <SelectValue placeholder="All types" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            <SelectItem value="expense">Expenses</SelectItem>
-            <SelectItem value="income">Income</SelectItem>
-          </SelectContent>
-        </Select>
+        <Button
+          variant={selectedTypes.includes("income") ? "default" : "outline"}
+          size="sm"
+          className="h-9"
+          aria-pressed={selectedTypes.includes("income")}
+          onClick={() => toggleType("income")}
+        >
+          Income
+        </Button>
+        <Button
+          variant={selectedTypes.includes("expense") ? "default" : "outline"}
+          size="sm"
+          className="h-9"
+          aria-pressed={selectedTypes.includes("expense")}
+          onClick={() => toggleType("expense")}
+        >
+          Expenses
+        </Button>
 
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-44" aria-label="Filter by category">
+          <SelectTrigger className="h-9 w-44" aria-label="Filter by category">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
@@ -221,7 +263,7 @@ export default function Transactions() {
       <QuickAddDialog
         open={!!quickCategory}
         category={quickCategory}
-        currency={wallets[0]?.currency ?? "MXN"}
+        currency={wallets[0]?.currency ?? defaultCurrency}
         onOpenChange={(open) => { if (!open) setQuickCategory(null) }}
         onConfirm={handleQuickAdd}
       />

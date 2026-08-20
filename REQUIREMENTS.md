@@ -20,6 +20,7 @@
 
 - Unique constraint: (user_id, name) — no duplicate wallet names per user
 - Default wallet created on signup (name: "General", currency: "MXN")
+- The user's **default currency** (Settings → Preferences, stored in `profiles.currency`) is used as the fallback wherever a wallet does not specify a currency and as the pre-selected currency for new wallets
 
 ### 1.3 Supported Currencies (initial)
 MXN, USD, EUR, CAD, GBP, BRL, COP, ARS, UYU — defined in `web/src/lib/utils.ts`.
@@ -53,6 +54,13 @@ Add `wallet_id` to the existing `transactions` table:
 - User says: amount + category (e.g. "500 on food")
 - App auto-fills: date = today, wallet = default wallet
 - User reviews and confirms before saving
+
+### 2.4 Transactions Page Filters
+- Filter toolbar sits at the **top** of the page, all controls on one row at the same height
+- **Search:** a magnifier icon (no always-visible search bar) — clicking it expands an input to type; an X closes it and clears the query
+- **Income / Expenses:** two independent toggle buttons; tapping the active one clears it back to "All"; both on = All
+- **Categories:** dropdown of all expense and income categories
+- Clear button and filtered-result count appear only while a filter is active; deep-linkable via `?category=`, `?q=`, `?type=income|expense|income,expense`
 
 ---
 
@@ -102,7 +110,7 @@ Shows expense breakdown by category for the selected wallet(s), driven by the SA
 - Categories with budget: budget progress bar (spent/budget) with color coding
 - Categories without budget: percentage of total spending bar
 - Sorted highest to lowest by amount
-- "Manage budgets →" link at bottom (only when budgets exist)
+- "Manage budgets →" link at bottom (only when budgets exist), navigating to `/settings/budgets`
 - In **All time** mode budget bars are suppressed (a monthly budget vs. lifetime spend is meaningless) with a hint caption: "Budgets are monthly — switch to a month view to see them."
 - When a wallet has more than 8 categories, the list becomes a vertical scroll area (`max-h-[30rem] overflow-y-auto`) so the wallet block does not grow unbounded
 - Budget spent is evaluated against the selected month (monthly budgets) or intersects `[start,end]` (custom-period budgets); this fixes the previous latent bug where monthly budgets always looked at the current month
@@ -175,8 +183,13 @@ Two budget types, both requiring a wallet:
 - JSON format with metadata (exported_at timestamp)
 
 ### 6.4 Settings Page (`/settings`)
-- Accessible from user dropdown menu in Navbar
-- Sections: Profile, Data Management (Import CSV, Export CSV, Export JSON)
+- Accessible from the Navbar (desktop Sidebar footer and mobile bottom bar)
+- Sections:
+  - **Profile** — shows the account email; the User ID is intentionally hidden
+  - **Preferences** — selectable default currency (`profiles.currency`), used as the fallback currency and as the default for new wallets
+  - **Manage** — links to Categories, Wallets, and Budgets (`/settings/categories`, `/settings/wallets`, `/settings/budgets`); these pages were moved out of the main navbar into Settings to keep it lean
+  - **Appearance** — theme selector (Light / Dark / System)
+  - **Data Management** — Import CSV, Export CSV, Export JSON
 
 ---
 

@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { FormActions } from "@/components/ui/FormActions"
+import { useProfile } from "@/providers/ProfileProvider"
 import type { Budget, NewBudget, Category, Wallet } from "@/lib/types"
 import { getCurrencySymbol } from "@/lib/utils"
 
@@ -30,6 +31,7 @@ function getBudgetType(budget: Budget): BudgetType {
 }
 
 export function BudgetForm({ categories, wallets, initialData, onSubmit, onCancel }: BudgetFormProps) {
+  const { currency: defaultCurrency } = useProfile()
   const [budgetType, setBudgetType] = useState<BudgetType>(
     initialData ? getBudgetType(initialData) : "wallet"
   )
@@ -45,7 +47,7 @@ export function BudgetForm({ categories, wallets, initialData, onSubmit, onCance
 
   const expenseCategories = categories.filter((c) => c.type === "expense")
   const selectedWallet = wallets.find((w) => w.id === walletId)
-  const currency = selectedWallet?.currency ?? wallets[0]?.currency ?? "MXN"
+  const currency = selectedWallet?.currency ?? wallets[0]?.currency ?? defaultCurrency
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

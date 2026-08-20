@@ -1,6 +1,7 @@
 import { Calendar } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useProfile } from "@/providers/ProfileProvider"
 import { formatCurrency } from "@/lib/utils"
 import { getScheduleDescription, isDueOrOverdue } from "@/lib/recurring"
 import type { RecurringTransaction } from "@/lib/types"
@@ -10,6 +11,7 @@ interface UpcomingRecurringSectionProps {
 }
 
 export function UpcomingRecurringSection({ recurring }: UpcomingRecurringSectionProps) {
+  const { currency: defaultCurrency } = useProfile()
   if (!recurring.length) return null
 
   return (
@@ -27,7 +29,7 @@ export function UpcomingRecurringSection({ recurring }: UpcomingRecurringSection
       </CardHeader>
       <CardContent className="space-y-2">
         {recurring.map((item) => {
-          const currency = item.wallet?.currency ?? "MXN"
+          const currency = item.wallet?.currency ?? defaultCurrency
           const icon = item.category?.icon ?? "🔄"
           const name = item.category?.name ?? "Recurring"
           const overdue = isDueOrOverdue(item.next_due_date)

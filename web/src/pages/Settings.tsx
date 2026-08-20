@@ -1,13 +1,23 @@
 import { useState } from "react"
-import { Upload, Sun, Moon, Monitor } from "lucide-react"
+import { Link } from "react-router-dom"
+import { Upload, Sun, Moon, Monitor, Tags, Landmark, Receipt, ChevronRight } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTheme } from "@/hooks/useTheme"
+import { useProfile } from "@/providers/ProfileProvider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ExportSection } from "@/components/exports/ExportSection"
 import { CsvImportDialog } from "@/components/transactions/CsvImportDialog"
 import { useTransactions } from "@/hooks/useTransactions"
+import { CURRENCIES } from "@/lib/utils"
 import { cn } from "@/lib/utils"
 
 const themes = [
@@ -16,9 +26,16 @@ const themes = [
   { value: "system" as const, label: "System", icon: Monitor },
 ]
 
+const manageLinks = [
+  { to: "/settings/categories", icon: Tags, label: "Categories", description: "Manage expense and income categories" },
+  { to: "/settings/wallets", icon: Landmark, label: "Wallets", description: "Manage your wallets and their currencies" },
+  { to: "/settings/budgets", icon: Receipt, label: "Budgets", description: "Set and track monthly budgets" },
+]
+
 export default function Settings() {
   const { user } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { currency, setCurrency } = useProfile()
   const { refetch } = useTransactions(user?.id)
   const [importOpen, setImportOpen] = useState(false)
 
@@ -37,11 +54,56 @@ export default function Settings() {
               <span className="text-muted-foreground">Email</span>
               <span>{user?.email}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">User ID</span>
-              <span className="font-mono text-xs">{user?.id}</span>
-            </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="transition-shadow hover:shadow-elevated">
+        <CardHeader>
+          <CardTitle>Preferences</CardTitle>
+          <CardDescription>Set your default currency</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Select value={currency} onValueChange={(code) => setCurrency(code).catch(() => {})}>
+              <SelectTrigger className="w-full sm:w-72" aria-label="Default currency">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCIES.map((c) => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {c.symbol} {c.code} — {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Used as the default when a wallet does not specify a currency.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="transition-shadow hover:shadow-elevated">
+        <CardHeader>
+          <CardTitle>Manage</CardTitle>
+          <CardDescription>Categories, wallets, and budgets</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {manageLinks.map(({ to, icon: Icon, label, description }) => (
+            <Link
+              key={to}
+              to={to}
+              className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-accent/50"
+            >
+              <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">{label}</p>
+                <p className="text-xs text-muted-foreground">{description}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          ))}
         </CardContent>
       </Card>
 

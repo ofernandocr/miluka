@@ -1,6 +1,7 @@
 import { memo } from "react"
 import { Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useProfile } from "@/providers/ProfileProvider"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import type { Transaction } from "@/lib/types"
 
@@ -11,8 +12,9 @@ interface TransactionItemProps {
 }
 
 export const TransactionItem = memo(function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps) {
+  const { currency: defaultCurrency } = useProfile()
   const isExpense = transaction.type === "expense"
-  const currency = transaction.wallet?.currency ?? "MXN"
+  const currency = transaction.wallet?.currency ?? defaultCurrency
 
   return (
     <div className="flex items-center gap-4 bg-card p-4 transition-colors hover:bg-accent/50">
