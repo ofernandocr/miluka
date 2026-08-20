@@ -139,13 +139,13 @@ describe("validateRows", () => {
     expect(result[0]!._resolvedWalletId).toBe("w1")
   })
 
-  it("warns when wallet not found (but row stays valid if other fields ok)", () => {
+  it("warns when wallet not found and assigns the default wallet", () => {
     const rows: CsvRow[] = [
       { date: "2026-07-15", type: "expense", amount: "100", description: "", category: "Food", wallet: "Nonexistent", currency: "", id: "" },
     ]
     const result = validateRows(rows, mockCategories, mockWallets, new Set())
     expect(result[0]!._status).toBe("warning")
-    expect(result[0]!._resolvedWalletId).toBeNull()
+    expect(result[0]!._resolvedWalletId).toBe("w1")
     expect(result[0]!._errors.some((e) => e.includes("not found"))).toBe(true)
   })
 

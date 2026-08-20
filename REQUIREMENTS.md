@@ -167,7 +167,7 @@ Two budget types, both requiring a wallet:
 - Validation: type (expense/income), amount (>0), category (required, must exist), date (valid)
 - Duplicate detection: if CSV row has `id` column matching existing transaction → skip
 - Import flow: Upload → Preview (valid/warning/error rows) → Confirm → Summary
-- Warning: wallet not found → saved without wallet
+- Warning: wallet not found → transaction is assigned to the default (first) wallet instead of being dropped from the dashboard
 - Error: category not found, invalid type, invalid amount, invalid date
 
 ### 6.3 Full Backup (JSON)
@@ -203,7 +203,8 @@ Let users define fixed recurring expenses (rent, subscriptions, utilities) that 
 | created_at      | timestamptz   | default now()                            |
 | updated_at      | timestamptz   | auto-updated via trigger                 |
 
-- Unique constraint: one template per user/category/wallet/description/frequency — the Detalle (description) distinguishes multiple templates with the same category, wallet and frequency
+- Unique constraint: one template per user/category/wallet/frequency
+- On creation, `next_due_date` is computed from the frequency: weekly = today + 7 days, monthly/quarterly/yearly = next occurrence of the day of month (clamped to 28)
 - Recurring templates can also be created inline from the New Transaction wizard (final Date step, optional checkbox), seeding the template from the transaction's amount, type, description, category and wallet
 
 ### 7.3 Automation

@@ -94,12 +94,7 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
 
   // ── Create mode: wizard ──
   return (
-    <form
-      onSubmit={(e) => { e.preventDefault(); if (!submitting && step === totalSteps - 1) handleSubmit() }}
-      onKeyDown={handleKeyDown}
-      onKeyDownCapture={(e) => { if (e.key === "Enter") e.preventDefault() }}
-      className="space-y-6"
-    >
+    <form onSubmit={(e) => e.preventDefault()} onKeyDown={handleKeyDown} className="space-y-6">
       {/* Progress dots */}
       <div className="flex items-center justify-center gap-2" aria-label={`Step ${step + 1} of ${totalSteps}`}>
         {Array.from({ length: totalSteps }).map((_, i) => (
@@ -135,7 +130,6 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
           categoryId={categoryId}
           onSelect={(id) => {
             form.setCategoryId(id)
-            setTimeout(goNext, 150)
           }}
         />
       )}
@@ -183,15 +177,17 @@ export function TransactionForm({ categories, wallets, initialData, onSubmit, on
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancel
           </Button>
-          {step === totalSteps - 1 ? (
-            <Button type="submit" size="sm" disabled={submitting}>
-              {submitting ? "Saving..." : "Create"}
-            </Button>
-          ) : (
-            <Button type="button" size="sm" onClick={goNext} disabled={!canGoNext()}>
-              Next
-            </Button>
-          )}
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => {
+              if (step === totalSteps - 1) handleSubmit()
+              else goNext()
+            }}
+            disabled={submitting || (step !== totalSteps - 1 && !canGoNext())}
+          >
+            {submitting ? "Saving..." : step === totalSteps - 1 ? "Create" : "Next"}
+          </Button>
         </div>
       </div>
     </form>

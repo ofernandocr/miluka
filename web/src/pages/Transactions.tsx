@@ -208,7 +208,13 @@ export default function Transactions() {
 
       <QuickAddFab
         quickCategories={topCategories}
-        onQuickAdd={(cat) => setQuickCategory(cat)}
+        onQuickAdd={(cat) => {
+          if (wallets.length > 1) {
+            setDialogOpen(true)
+          } else {
+            setQuickCategory(cat)
+          }
+        }}
         onFullForm={() => setDialogOpen(true)}
       />
 

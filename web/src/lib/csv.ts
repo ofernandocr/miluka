@@ -164,17 +164,18 @@ export function validateRows(
 
     let resolvedWalletId: string | null | undefined = undefined
     const walletName = row.wallet?.trim()
+    const defaultWalletId = wallets[0]?.id ?? null
     if (walletName) {
       const match = wallets.find((w) => w.name.toLowerCase() === walletName.toLowerCase())
       if (!match) {
         if (status !== "error") status = "warning"
-        errors.push(`Wallet "${walletName}" not found (will be saved without wallet)`)
-        resolvedWalletId = null
+        errors.push(`Wallet "${walletName}" not found (will use default wallet)`)
+        resolvedWalletId = defaultWalletId
       } else {
         resolvedWalletId = match.id
       }
     } else {
-      resolvedWalletId = null
+      resolvedWalletId = defaultWalletId
     }
 
     return {

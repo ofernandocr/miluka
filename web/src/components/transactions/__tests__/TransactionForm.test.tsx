@@ -29,6 +29,7 @@ const walkToDate = async () => {
   fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "100" } })
   fireEvent.click(screen.getByRole("button", { name: "Next" }))
   fireEvent.click(screen.getByRole("button", { name: "🍔 Food" }))
+  fireEvent.click(screen.getByRole("button", { name: "Next" }))
   await waitFor(() => expect(screen.getByLabelText("Description (optional)")).toBeInTheDocument())
   fireEvent.click(screen.getByRole("button", { name: "Next" }))
   await waitFor(() => expect(screen.getByLabelText("Date")).toBeInTheDocument())
@@ -197,6 +198,7 @@ describe("TransactionForm recurring checkbox (inline on Date step)", () => {
     fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "100" } })
     fireEvent.click(screen.getByRole("button", { name: "Next" }))
     fireEvent.click(screen.getByRole("button", { name: "🍔 Food" }))
+    fireEvent.click(screen.getByRole("button", { name: "Next" }))
     await waitFor(() => expect(screen.getByLabelText("Description (optional)")).toBeInTheDocument())
 
     fireEvent.change(screen.getByLabelText("Description (optional)"), { target: { value: "Lunch" } })

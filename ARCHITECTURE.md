@@ -87,7 +87,7 @@ miluka/
 - `transactions.amount > 0` — positive amounts only
 - `transactions.type IN ('expense', 'income')`
 - `budgets(user_id, COALESCE(category_id,''), COALESCE(wallet_id,''))` — one budget per user/category/wallet combination
-- `recurring_transactions(user_id, category_id, COALESCE(wallet_id,''), COALESCE(description,''), frequency)` — one template per user/category/wallet/description/frequency; the Detalle (description) distinguishes multiple templates sharing the same category, wallet and frequency
+- `recurring_transactions(user_id, category_id, COALESCE(wallet_id,''), frequency)` — one template per user/category/wallet/frequency
 - `profiles.currency` is kept for backwards compatibility; wallets table is the source of truth for transaction currency
 
 ### Default Wallet
@@ -172,6 +172,7 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 
 ### TransactionForm
 - Create mode is a 5-7 step wizard (Type → Wallet? → Amount → Category → Description → Date). The final Date step also renders an optional "🔁 Make this a recurring template" checkbox (only when the page passes the `onCreateRecurring` callback); when enabled it reveals a frequency selector and (for non-weekly) a day-of-month selector
+- Step navigation is driven by a single "Next"/"Create" button (`type="button"`, no native form submit) plus per-step keyboard handlers: Enter advances from the Amount and Description steps and submits from the Date step, Backspace on an empty Amount/Description goes back, and Escape cancels; selecting a category no longer auto-advances (the user confirms with Next/Enter), and Enter on a focused button activates it natively
 - On submit the form calls `onSubmit` (creates the transaction) and, when the recurring checkbox is on, also calls the optional `onCreateRecurring` prop with a template seeded from the same amount/type/description/category/wallet/frequency; the transaction is always saved even if the recurring template creation fails (errors surface as a toast from the page)
 - Edit mode renders the classic single-page form and never shows the recurring checkbox
 
@@ -319,6 +320,6 @@ See `DEPLOY.md` for full deployment instructions.
 - Overdue banner on page load when templates are past due
 - Pause/resume toggle per template
 - "+" per template opens a confirmation dialog to review/edit the amount and date before generating
-- Top 4 most-used expense categories are surfaced as circular quick-add shortcuts (with name label) on the main FAB (Dashboard and Transactions pages); selecting one opens a minimal confirmation dialog that requires both amount and description
+- Top 4 most-used expense categories are surfaced as circular quick-add shortcuts (with name label) on the main FAB (Dashboard and Transactions pages); selecting one opens a minimal confirmation dialog that requires both amount and description. When the user has more than one wallet, selecting a shortcut opens the full "New Transaction" wizard instead (so the wallet is never silently guessed)
 - Duplicate prevention: the unique constraint includes the description, allowing multiple templates with the same category/wallet/frequency when the Detalle differs; the client pre-checks via `hasDuplicateRecurringTemplate` and falls back to a friendly toast on the 23505 error
 - Dashboard surfaces the top 5 active templates nearest to due date (including past-due) via `getUpcomingRecurring` in `lib/recurring.ts`, rendered in `UpcomingRecurringSection` between the wallet summaries and QuickAddFab

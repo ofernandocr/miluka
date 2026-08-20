@@ -12,6 +12,7 @@ export default function Register() {
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
 
   if (user) return <Navigate to="/" replace />
@@ -19,6 +20,10 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
     try {
       await signUp(email, password)
       navigate("/")
@@ -59,6 +64,18 @@ export default function Register() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 minLength={6}
                 required
               />

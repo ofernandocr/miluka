@@ -43,9 +43,27 @@ export function useRecurringTransactions(userId: string | undefined) {
   const createRecurring = async (item: NewRecurringTransaction) => {
     if (!userId) throw new Error("Not authenticated")
     const now = new Date()
-    const day = item.day_of_month ?? now.getDate()
-    const nextDue = new Date(now.getFullYear(), now.getMonth(), Math.min(day, 28))
-    if (nextDue <= now) nextDue.setMonth(nextDue.getMonth() + 1)
+    const day = Math.min(item.day_of_month ?? now.getDate(), 28)
+    let nextDue: Date
+
+    switch (item.frequency) {
+      case "weekly":
+        nextDue = new Date(now)
+        nextDue.setDate(nextDue.getDate() + 7)
+        break
+      case "quarterly": {
+        const quarterly = new Date(now.getFullYear(), now.getMonth() + 3, day)
+        nextDue = quarterly <= now ? new Date(now.getFullYear(), now.getMonth() + 4, day) : quarterly
+        break
+      }
+      case "yearly":
+        nextDue = new Date(now.getFullYear() + 1, now.getMonth(), day)
+        break
+      default: {
+        const monthly = new Date(now.getFullYear(), now.getMonth(), day)
+        nextDue = monthly <= now ? new Date(now.getFullYear(), now.getMonth() + 1, day) : monthly
+      }
+    }
 
     const { error } = await supabase.from("recurring_transactions").insert({
       ...item,

@@ -40,6 +40,8 @@ export function useTransactionForm({
   const [dayOfMonth, setDayOfMonth] = useState(() => Math.min(new Date().getDate(), 28))
   const showDayOfMonth = frequency !== "weekly"
 
+  const submittingRef = useRef(false)
+
   const amountRef = useRef<HTMLInputElement>(null)
   const descRef = useRef<HTMLInputElement>(null)
   const dateRef = useRef<HTMLInputElement>(null)
@@ -74,8 +76,9 @@ export function useTransactionForm({
   }, [])
 
   const handleSubmit = useCallback(async () => {
-    if (submitting) return
+    if (submittingRef.current) return
     if (!categoryId || !amount || parseFloat(amount) <= 0) return
+    submittingRef.current = true
     setSubmitting(true)
     try {
       await onSubmit({
@@ -102,9 +105,10 @@ export function useTransactionForm({
         }
       }
     } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
-  }, [submitting, categoryId, amount, onSubmit, type, description, walletId, date, isRecurring, onCreateRecurring, frequency, showDayOfMonth, dayOfMonth])
+  }, [categoryId, amount, onSubmit, type, description, walletId, date, isRecurring, onCreateRecurring, frequency, showDayOfMonth, dayOfMonth])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -112,16 +116,9 @@ export function useTransactionForm({
       if (e.key === "Escape") {
         e.preventDefault()
         onCancel()
-        return
       }
-      if (e.key !== "Enter") return
-      if (step === CATEGORY_STEP && !categoryId) return
-      if (step === AMOUNT_STEP && (!amount || parseFloat(amount) <= 0)) return
-      e.preventDefault()
-      if (step === totalSteps - 1) handleSubmit()
-      else goNext()
     },
-    [isEdit, step, categoryId, amount, totalSteps, goNext, onCancel, AMOUNT_STEP, CATEGORY_STEP, handleSubmit]
+    [isEdit, onCancel]
   )
 
   const handleAmountKeyDown = (e: React.KeyboardEvent) => {
