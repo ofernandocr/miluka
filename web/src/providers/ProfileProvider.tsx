@@ -3,7 +3,9 @@ import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/hooks/useAuth"
 
 interface ProfileContextValue {
+  name: string
   currency: string
+  setName: (name: string) => Promise<void>
   setCurrency: (code: string) => Promise<void>
 }
 
@@ -12,6 +14,7 @@ const ProfileContext = createContext<ProfileContextValue | null>(null)
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const userId = user?.id
+  const [name, setNameState] = useState("")
   const [currency, setCurrencyState] = useState("MXN")
 
   useEffect(() => {
@@ -21,10 +24,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       try {
         const { data } = await supabase
           .from("profiles")
-          .select("currency")
+          .select("full_name, currency")
           .eq("id", userId)
           .single()
-        if (!cancelled && data?.currency) setCurrencyState(data.currency)
+        if (!cancelled) {
+          if (data?.full_name) setNameState(data.full_name)
+          if (data?.currency) setCurrencyState(data.currency)
+        }
       } catch {
         if (!cancelled) setCurrencyState("MXN")
       }
@@ -45,7 +51,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [userId]
   )
 
-  return <ProfileContext.Provider value={{ currency, setCurrency }}>{children}</ProfileContext.Provider>
+  const setName = useCallback(
+    async (newName: string) => {
+      if (!userId) throw new Error("Not authenticated")
+      const { error } = await supabase.from("profiles").update({ full_name: newName }).eq("id", userId)
+      if (error) throw error
+      setNameState(newName)
+    },
+    [userId]
+  )
+
+  return <ProfileContext.Provider value={{ name, currency, setName, setCurrency }}>{children}</ProfileContext.Provider>
 }
 
 export function useProfile(): ProfileContextValue {

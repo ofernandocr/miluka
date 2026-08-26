@@ -77,6 +77,9 @@ const config: Config = {
         card: "var(--shadow-card)",
         elevated: "var(--shadow-elevated)",
         float: "var(--shadow-float)",
+        soft: "var(--shadow-soft)",
+        "soft-sm": "var(--shadow-soft-sm)",
+        "soft-inset": "var(--shadow-soft-inset)",
       },
       keyframes: {
         "accordion-down": {

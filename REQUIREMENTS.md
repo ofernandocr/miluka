@@ -88,9 +88,9 @@ Add `wallet_id` to the existing `transactions` table:
 ## 4. Dashboard
 
 ### 4.1 Wallet Filter
-- By default: consolidated view of all wallets
-- Dropdown/selector to filter by a specific wallet
-- When filtered, only that wallet's transactions are shown
+- Horizontal scrollable `WalletCardsRow` showing all wallets as compact cards (SoftCard)
+- Mobile: scroll-snap for centered selection; desktop (`lg:`) shows all cards in a flex row
+- Selecting a card filters the chart to that wallet; `selectedSummary` drives the ring chart
 
 ### 4.2 Period Selector
 - Single navigable period drives the entire dashboard (unified "one clock" model)
@@ -98,34 +98,26 @@ Add `wallet_id` to the existing `transactions` table:
 - Next-month chevron disabled at the current month; "All time" hides the chevrons
 - Replaces the old binary `TimeRangeToggle`; the period is resolved against an arbitrary `{year, month}` (not just "now")
 
-### 4.3 Summary Cards
-- Each wallet section shows Income / Expenses / Balance cards for that wallet's currency, driven by the selected period
-- Wallets without transactions in the period still show zeroed entries so their figures stay visible
-- Balance = income − expense for the selected period (period flow, not cumulative)
-- Each amount displayed with its currency symbol
+### 4.3 SpendingRingChart (Donut Chart)
+- SVG donut chart replaces the old spending-by-category list
+- Each slice represents a category's proportion of total spending
+- Animated on mount (RAF-based sweep animation)
+- Compact amounts displayed (e.g. "1.2k", "350")
+- Clicking a slice navigates to `/transactions?category=<id>`
+- Color-coded legend below the chart
 
-### 4.4 Spending by Category (Unified List)
-Shows expense breakdown by category for the selected wallet(s), driven by the SAME period:
-
-- Categories with budget: budget progress bar (spent/budget) with color coding
-- Categories without budget: percentage of total spending bar
-- Sorted highest to lowest by amount
-- "Manage budgets →" link at bottom (only when budgets exist), navigating to `/settings/budgets`
-- In **All time** mode budget bars are suppressed (a monthly budget vs. lifetime spend is meaningless) with a hint caption: "Budgets are monthly — switch to a month view to see them."
-- When a wallet has more than 8 categories, the list becomes a vertical scroll area (`max-h-[30rem] overflow-y-auto`) so the wallet block does not grow unbounded
-- Budget spent is evaluated against the selected month (monthly budgets) or intersects `[start,end]` (custom-period budgets); this fixes the previous latent bug where monthly budgets always looked at the current month
-
-### 4.5 Visual Design
+### 4.4 Visual Design
 - Light/Dark theme with system preference detection
 - Collapsible sidebar (desktop) / bottom tab bar (mobile)
-- No page H1 title — the top bar holds the wallet selector and period selector, and the per-wallet summary cards anchor the screen
-- Each wallet is a self-contained **block** (single `rounded-2xl` card with `bg-card`) holding the header, Income/Expenses/Balance cards, and the spending-by-category list; a colored top strip (`wallet.color`) visually distinguishes one wallet block from another
+- No page H1 title — the top bar holds only the `PeriodSelector`
+- **Soft-UI / Neumorphic design** for all custom components (SoftCard, SoftButton, SoftChip, etc.)
+- CSS tokens: pastel purple palette (`--primary-h`, `--primary-s`, `--primary-l`) in HSL triplet format for use with `hsl(var(--x))` pattern
+- Shadow tokens: `shadow-soft`, `shadow-soft-sm`, `shadow-soft-inset` for neumorphic depth
 - Staggered list animations for transactions, categories, wallets, budgets
 - Hover/tap effects on all interactive elements
 - Monospace numbers (JetBrains Mono) for financial data
-- Friendly shapes: rounded (`rounded-2xl`) gradient cards for the per-wallet summary figures
 
-### 4.6 Upcoming Recurring
+### 4.5 Upcoming Recurring
 - Dashboard shows the 5 nearest active recurring templates ordered ascending by `next_due_date`; past-due active templates surface first with a "Due" badge
 - Rendered as a compact card titled **"Upcoming"** (category icon, description as primary text, category name muted when a description exists, schedule subtitle, amount + next-due date) after the wallet summaries and before the QuickAddFAB
 - "View all →" link navigates to `/recurring`
@@ -185,11 +177,23 @@ Two budget types, both requiring a wallet:
 ### 6.4 Settings Page (`/settings`)
 - Accessible from the Navbar (desktop Sidebar footer and mobile bottom bar)
 - Sections:
-  - **Profile** — shows the account email; the User ID is intentionally hidden
+  - **Profile** — editable display name (inline edit with save/cancel), shows account email; the User ID is intentionally hidden
   - **Preferences** — selectable default currency (`profiles.currency`), used as the fallback currency and as the default for new wallets
   - **Manage** — links to Categories, Wallets, and Budgets (`/settings/categories`, `/settings/wallets`, `/settings/budgets`); these pages were moved out of the main navbar into Settings to keep it lean
   - **Appearance** — theme selector (Light / Dark / System)
   - **Data Management** — Import CSV, Export CSV, Export JSON
+
+### 6.5 Forgot Password
+- Login page has a "Forgot your password?" link below the form
+- Opens a dialog prompting for email address
+- Calls `supabase.auth.resetPasswordForEmail()` with a redirect back to `/settings`
+- Shows success state after email is sent; user is instructed to check their inbox
+
+### 6.6 Onboarding
+- Shown once after first login (guarded by `miluka_onboarding_done` localStorage key)
+- 4-slide dialog introducing: Welcome, Multiple Wallets, Categorize Expenses, Recurring Transactions
+- Final slide includes an optional name input; saves to `profiles.full_name` via `ProfileProvider.setName()`
+- Skip and Get started buttons; persists completion to localStorage on skip or completion
 
 ---
 

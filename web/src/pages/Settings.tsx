@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { Upload, Sun, Moon, Monitor, Tags, Landmark, Receipt, ChevronRight } from "lucide-react"
+import { Upload, Sun, Moon, Monitor, Tags, Landmark, Receipt, ChevronRight, Check, X } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTheme } from "@/hooks/useTheme"
 import { useProfile } from "@/providers/ProfileProvider"
@@ -35,9 +35,26 @@ const manageLinks = [
 export default function Settings() {
   const { user } = useAuth()
   const { theme, setTheme } = useTheme()
-  const { currency, setCurrency } = useProfile()
+  const { name, currency, setName, setCurrency } = useProfile()
   const { refetch } = useTransactions(user?.id)
   const [importOpen, setImportOpen] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState(name)
+  const [nameSaving, setNameSaving] = useState(false)
+
+  const handleNameSave = async () => {
+    if (nameInput.trim() === name) {
+      setEditingName(false)
+      return
+    }
+    setNameSaving(true)
+    try {
+      await setName(nameInput.trim())
+      setEditingName(false)
+    } finally {
+      setNameSaving(false)
+    }
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 pb-24 lg:pb-6">
@@ -49,7 +66,50 @@ export default function Settings() {
           <CardDescription>Your account information</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-muted-foreground">Name</span>
+              {editingName ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    className="h-7 w-40 rounded border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleNameSave()
+                      if (e.key === "Escape") { setNameInput(name); setEditingName(false) }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleNameSave}
+                    disabled={nameSaving}
+                    className="text-primary hover:opacity-80"
+                    aria-label="Save name"
+                  >
+                    <Check className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setNameInput(name); setEditingName(false) }}
+                    className="text-muted-foreground hover:text-foreground"
+                    aria-label="Cancel name edit"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => { setNameInput(name); setEditingName(true) }}
+                  className="flex items-center gap-1 hover:underline"
+                >
+                  <span>{name || <span className="text-muted-foreground italic">Set your name</span>}</span>
+                </button>
+              )}
+            </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Email</span>
               <span>{user?.email}</span>

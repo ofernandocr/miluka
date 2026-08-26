@@ -58,13 +58,14 @@ miluka/
         │   ├── useTransactions.ts # Transaction CRUD (+ category, wallet join)
         │   └── useWallets.ts  # Wallet CRUD
         ├── components/
-        │   ├── layout/       # Sidebar, BottomNav, ProtectedRoute
+        │   ├── layout/       # Sidebar, BottomNav, ProtectedRoute, OnboardingWrapper
         │   ├── ui/           # shadcn/ui primitives (button, card, dialog, ThemeToggle, FloatingActionButton)
+        │   ├── ui/soft/      # Neumorphic soft-UI components (SoftCard, SoftButton, SoftTextField, SoftChip, SoftFab, SoftProgressBar, SoftSegmentedControl)
         │   ├── budgets/      # BudgetForm, BudgetList (BudgetCard)
         │   ├── recurring/    # RecurringForm, RecurringList (RecurringCard), RecurringOverdueBanner, UpcomingRecurringSection
         │   ├── categories/   # CategoryList, CategoryForm
         │   ├── transactions/ # TransactionList, TransactionForm, TransactionFormFields, TransactionItem, CsvImportDialog
-        │   ├── dashboard/    # PeriodSelector, WalletSummaryCards, SpendingByCategoryList
+        │   ├── dashboard/    # PeriodSelector, SpendingRingChart, WalletCardsRow
         │   ├── exports/      # ExportSection (CSV/JSON export)
         │   └── wallets/      # WalletList, WalletForm
         └── pages/            # Route pages (Login, Register, Dashboard, Transactions, Recurring, Settings + /settings/{categories,wallets,budgets} sub-routes)
@@ -121,6 +122,7 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 - All components consume auth via the `useAuth()` hook (re-exported from `src/hooks/useAuth.ts`) which reads from `AuthContext`
 - This eliminates duplicate auth subscriptions that previously occurred when `useAuth()` was called independently in every page and layout component
 - Login/Register pages use the same `useAuth()` but operate outside `ProtectedRoute`
+- `AuthProvider` exposes: `signIn`, `signUp`, `signOut`, `resetPassword` (for forgot-password flow)
 
 ## API Access
 
@@ -132,7 +134,8 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 
 - No global state store (Redux, Zustand, etc.)
 - Auth state shared via `AuthProvider` context (single subscription)
-- Default currency shared via `ProfileProvider` context (loads `profiles.currency`, exposes `setCurrency`); consumed with `useProfile()` across pages and display components
+- User profile shared via `ProfileProvider` context (loads `profiles.full_name` and `profiles.currency`, exposes `setName` and `setCurrency`); consumed with `useProfile()` across pages and display components
+- `OnboardingWrapper` (in `App.tsx`) guards the onboarding dialog — renders children first, then shows `OnboardingDialog` on first login if `miluka_onboarding_done` key is absent from localStorage; the dialog walks through 4 feature slides and saves the user's name via `setName` on completion
 - CRUD hooks (`useTransactions`, `useCategories`, `useWallets`, `useBudgets`, `useRecurringTransactions`) each manage their own state and refetch on mutation
 - `useQuickAdd` hook encapsulates the shared quick-add FAB + dialog pattern used by Dashboard and Transactions (category ranking, quick-add handler, recurring template handler)
 - `useRecurringTransactions` includes a `useRef` guard to prevent the auto-generate RPC from looping if the server fails to advance `next_due_date`
@@ -197,27 +200,22 @@ Browser ──GET───> Kong (:8000/rest/v1/) ───strip_path──> Pos
 
 ## Dashboard Filtering
 
-The Dashboard uses a single "one clock" period model plus per-wallet data isolation. A `Period` (`{ kind: "month"; year; month } | { kind: "all" }`) drives every widget, so every wallet section and spending list always agree.
+The Dashboard uses a single "one clock" period model plus per-wallet data isolation. A `Period` (`{ kind: "month"; year; month } | { kind: "all" }`) drives every widget.
 
 1. `filterByPeriod(tx, period)` — filters transactions by the selected month (or returns all for `"all"`)
 2. `computeWalletSummaries(tx, wallets)` — returns `[{ wallet, income, expense, categoryData }]` per wallet, seeding all wallets so empty periods still show zeroed figures
-3. `computeCategoryData(tx)` — returns `[{ id, name, icon, value, color }]` for a single wallet's expenses
-4. `buildUnifiedCategories(categoryData, budgets, totalExpense)` — merges budget data with spending data into a single list (budgets only passed in month mode)
+3. `buildUnifiedCategories(categoryData, budgets, totalExpense)` — merges budget data with spending data (budgets only passed in month mode)
 
 The `PeriodSelector` provides chevron navigation (`‹`/`›`), a dropdown with a native month input for jumping, a "This month" reset, and `[Month | All time]` segments; the next chevron is disabled at the current month and hidden in All time.
 
 The page shows:
-- No H1 title — the top bar holds the wallet filter and `PeriodSelector`
-- Per-wallet **blocks**: each wallet is a single `rounded-2xl border bg-card` container with a `wallet.color` top strip, holding the header (icon, name, currency), summary cards, and the unified spending list:
-  - Summary cards (Income, Expenses, Balance) always visible per wallet, including empty periods (zeroed)
-  - Categories with budget: budget progress bar (spent/budget) with color coding (green/yellow/orange/red), evaluated against the selected month
-  - Categories without budget: percentage of total spending bar using category color
-  - Sorted highest to lowest by amount
-  - "Manage budgets →" link at bottom (only when budgets exist), navigating to `/settings/budgets`
-  - In All time mode budget bars are suppressed with a "Budgets are monthly" hint
-  - The spending list scrolls vertically (`max-h-[30rem] overflow-y-auto`) when a wallet has more than 8 categories, keeping the block compact
+- No H1 title — the top bar holds the `PeriodSelector`
+- **`WalletCardsRow`**: a horizontally scrollable row of wallet cards (SoftCard), showing icon, name, currency, and color. On desktop (`lg:`) all wallets display in a flex row. Mobile uses scroll-snap for centered selection. Active card is visually highlighted.
+- **`SpendingRingChart`**: an SVG donut/ring chart replacing the old spending-by-category list. Each slice represents a category's proportion of total spending. Animated on mount (RAF-based sweep). Shows compact amounts (e.g. "1.2k"). A legend below the chart maps color to category. Clicking a slice navigates to `/transactions?category=<id>`.
+- Empty state when a selected wallet has no expenses in the period.
 
-When a specific wallet is selected via dropdown, only that wallet's section is shown.
+Transactions page supports URL-based filters via `useSearchParams`: `?category=<id>`, `?q=<text>`, and `?type=<income|expense|income,expense>`.
+- The filter toolbar sits at the top of the page, one row at the same height: a **magnifier** icon that expands into a search input when clicked (X closes and clears it), **Income**/**Expenses** as independent toggle buttons (tapping the active one clears it back to "All"), and a **Categories** dropdown; a Clear button and result count appear only while a filter is active.
 
 Transactions page supports URL-based filters via `useSearchParams`: `?category=<id>`, `?q=<text>`, and `?type=<income|expense|income,expense>`.
 - The filter toolbar sits at the top of the page, one row at the same height: a **magnifier** icon that expands into a search input when clicked (X closes and clears it), **Income**/**Expenses** as independent toggle buttons (tapping the active one clears it back to "All"), and a **Categories** dropdown; a Clear button and result count appear only while a filter is active.
@@ -226,9 +224,9 @@ Transactions page supports URL-based filters via `useSearchParams`: `?category=<
 
 | Type | Tool | Location | Coverage |
 |------|------|----------|----------|
-| Unit (lib) | Vitest | `src/lib/__tests__/` | utils (17), quickAdd (5), recurring (15), csv (13), dashboard (all functions including buildUnifiedCategories, filterByPeriod), budgets (22) |
+| Unit (lib) | Vitest | `src/lib/__tests__/` | utils (17), quickAdd (5), recurring (15), csv (13), dashboard (all functions including buildUnifiedCategories, filterByPeriod), budgets (22), ringChart (computeRingSlices), formatAmountCompact |
 | Component | Vitest + RTL | `src/components/**/__tests__/` | TransactionForm (wizard flow, recurring checkbox, keyboard nav, error resilience), QuickAddDialog (validation, submit), TransactionList (grouping, interactions, empty state) |
-| Page (logic) | Vitest | `src/pages/__tests__/` | Dashboard pure functions (imported from lib/dashboard.ts), Transactions filter toolbar (magnifier, Income/Expenses toggles, search), Settings (currency select, hidden User ID, manage links) |
+| Page (logic) | Vitest | `src/pages/__tests__/` | Dashboard pure functions (imported from lib/dashboard.ts), Transactions filter toolbar (magnifier, Income/Expenses toggles, search), Settings (currency select, name editing, hidden User ID, manage links) |
 
 ## Deployment Architecture
 

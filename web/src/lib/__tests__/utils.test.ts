@@ -1,4 +1,11 @@
-import { formatCurrency, formatDate, getCurrencySymbol, cn, CURRENCIES } from "@/lib/utils"
+import {
+  formatCurrency,
+  formatDate,
+  getCurrencySymbol,
+  formatAmountCompact,
+  cn,
+  CURRENCIES,
+} from "@/lib/utils"
 
 describe("formatCurrency", () => {
   it("formats MXN currency by default", () => {
@@ -55,6 +62,24 @@ describe("getCurrencySymbol", () => {
 
   it("returns correct symbol for GBP", () => {
     expect(getCurrencySymbol("GBP")).toBe("£")
+  })
+})
+
+describe("formatAmountCompact", () => {
+  it("returns compact millions", () => {
+    expect(formatAmountCompact(1_500_000)).toBe("1.5M")
+    expect(formatAmountCompact(2_000_000)).toBe("2.0M")
+  })
+
+  it("returns compact thousands", () => {
+    expect(formatAmountCompact(3_400)).toBe("3.4k")
+    expect(formatAmountCompact(10_000)).toBe("10.0k")
+    expect(formatAmountCompact(1_000)).toBe("1.0k")
+  })
+
+  it("returns full format for small amounts", () => {
+    expect(formatAmountCompact(500)).toBe("500.00")
+    expect(formatAmountCompact(0)).toBe("0.00")
   })
 })
 

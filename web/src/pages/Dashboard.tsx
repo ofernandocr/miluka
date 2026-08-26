@@ -6,16 +6,8 @@ import { useProfile } from "@/providers/ProfileProvider"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useCategories } from "@/hooks/useCategories"
 import { useWallets } from "@/hooks/useWallets"
-import { useBudgets } from "@/hooks/useBudgets"
 import { useRecurringTransactions } from "@/hooks/useRecurringTransactions"
 import { useQuickAdd } from "@/hooks/useQuickAdd"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { TransactionForm } from "@/components/transactions/TransactionForm"
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
@@ -24,13 +16,12 @@ import { QuickAddFab } from "@/components/ui/QuickAddFab"
 import { QuickAddDialog } from "@/components/ui/QuickAddDialog"
 import { UpcomingRecurringSection } from "@/components/recurring/UpcomingRecurringSection"
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector"
-import { WalletSummaryCards } from "@/components/dashboard/WalletSummaryCards"
-import { SpendingByCategoryList } from "@/components/dashboard/SpendingByCategoryList"
-import { computeBudgetSpent } from "@/lib/budgets"
-import { buildUnifiedCategories, computeWalletSummaries, filterByPeriod, getCurrentPeriod } from "@/lib/dashboard"
+import { SpendingRingChart } from "@/components/dashboard/SpendingRingChart"
+import { WalletCardsRow } from "@/components/dashboard/WalletCardsRow"
+import { SoftCard } from "@/components/ui/soft"
+import { computeWalletSummaries, filterByPeriod, getCurrentPeriod } from "@/lib/dashboard"
 import { getUpcomingRecurring } from "@/lib/recurring"
-import { getCurrencySymbol } from "@/lib/utils"
-import type { NewTransaction, Budget } from "@/lib/types"
+import type { NewTransaction } from "@/lib/types"
 import type { Period } from "@/lib/dashboard"
 
 export default function Dashboard() {
@@ -39,11 +30,10 @@ export default function Dashboard() {
   const { transactions, loading, createTransaction } = useTransactions(user?.id)
   const { categories } = useCategories(user?.id)
   const { wallets } = useWallets(user?.id)
-  const { budgets } = useBudgets(user?.id)
   const { recurring: recurringTemplates, createRecurring } = useRecurringTransactions(user?.id)
   const navigate = useNavigate()
 
-  const [selectedWalletId, setSelectedWalletId] = useState<string>("all")
+  const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null)
   const [period, setPeriod] = useState<Period>(getCurrentPeriod)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -70,26 +60,10 @@ export default function Dashboard() {
     [timeFiltered, wallets]
   )
 
-  const visibleSummaries = useMemo(() => {
-    if (selectedWalletId === "all") return walletSummaries
-    return walletSummaries.filter((s) => s.wallet.id === selectedWalletId)
+  const selectedSummary = useMemo(() => {
+    if (!selectedWalletId) return walletSummaries[0] ?? null
+    return walletSummaries.find((s) => s.wallet.id === selectedWalletId) ?? null
   }, [walletSummaries, selectedWalletId])
-
-  const walletBudgets = useMemo(() => {
-    const map = new Map<string, { budget: Budget; spent: number }[]>()
-    for (const b of budgets) {
-      if (!b.wallet_id) continue
-      const spent = computeBudgetSpent(b, transactions, period)
-      const list = map.get(b.wallet_id) ?? []
-      list.push({ budget: b, spent })
-      map.set(b.wallet_id, list)
-    }
-    return map
-  }, [budgets, transactions])
-
-  const handleCategoryClick = (categoryId: string) => {
-    navigate(`/transactions?category=${categoryId}`)
-  }
 
   const handleCreate = async (data: NewTransaction) => {
     await createTransaction(data)
@@ -103,24 +77,6 @@ export default function Dashboard() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 pb-24 lg:pb-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          {wallets.length > 1 && (
-            <Select value={selectedWalletId} onValueChange={setSelectedWalletId}>
-              <SelectTrigger className="w-40" aria-label="Select wallet">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All wallets</SelectItem>
-                {wallets.map((w) => (
-                  <SelectItem key={w.id} value={w.id}>
-                    {w.icon} {w.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-
         <PeriodSelector period={period} onChange={setPeriod} />
       </div>
 
@@ -132,75 +88,35 @@ export default function Dashboard() {
         />
       )}
 
-      <div className="animate-in-stagger space-y-6">
-        {visibleSummaries.map((summary) => {
-          const totalExpense = summary.categoryData.reduce((s, c) => s + c.value, 0)
-          const budgetsForWallet = walletBudgets.get(summary.wallet.id) ?? []
-          const budgetsInView = period.kind === "all" ? [] : budgetsForWallet
-          const unified = buildUnifiedCategories(summary.categoryData, budgetsInView, totalExpense)
+      {wallets.length > 0 && (
+        <>
+          <WalletCardsRow
+            wallets={wallets}
+            walletSummaries={walletSummaries}
+            selectedWalletId={selectedWalletId}
+            onSelect={setSelectedWalletId}
+          />
 
-          return (
-            <div
-              key={summary.wallet.id}
-              className="animate-fade-up overflow-hidden rounded-2xl border bg-card shadow-sm transition-shadow hover:shadow-elevated"
-            >
-              <div
-                className="h-1.5 w-full"
-                style={{ backgroundColor: summary.wallet.color }}
-                aria-hidden="true"
+          {selectedSummary && selectedSummary.categoryData.length > 0 && (
+            <SoftCard className="p-4">
+              <SpendingRingChart
+                categoryData={selectedSummary.categoryData}
+                currency={selectedSummary.wallet.currency}
+                animate
+                onCategoryClick={(id) => navigate(`/transactions?category=${id}`)}
               />
-              <div className="space-y-4 p-4 sm:p-5">
-                {/* Wallet Header */}
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
-                    style={{ backgroundColor: summary.wallet.color + "20" }}
-                  >
-                    <span role="img" aria-label={summary.wallet.name}>
-                      {summary.wallet.icon}
-                    </span>
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold">{summary.wallet.name}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {getCurrencySymbol(summary.wallet.currency)} {summary.wallet.currency}
-                    </p>
-                  </div>
-                </div>
+            </SoftCard>
+          )}
 
-                <WalletSummaryCards
-                  income={summary.income}
-                  expense={summary.expense}
-                  currency={summary.wallet.currency}
-                />
-
-                {unified.length > 0 ? (
-                  <SpendingByCategoryList
-                    unified={unified}
-                    onCategoryClick={handleCategoryClick}
-                    currency={summary.wallet.currency}
-                    showBudgetsHint={period.kind === "all" && budgetsForWallet.length > 0}
-                    nested
-                  />
-                ) : (
-                  <div className="border-t pt-4 text-center text-sm text-muted-foreground">
-                    No expenses in this wallet for the selected period.
-                  </div>
-                )}
-
-                {budgetsForWallet.length > 0 && (
-                  <button
-                    onClick={() => navigate("/settings/budgets")}
-                    className="w-full rounded-lg border border-dashed py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-                  >
-                    Manage budgets →
-                  </button>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+          {selectedSummary && selectedSummary.categoryData.length === 0 && (
+            <SoftCard className="flex items-center justify-center p-8">
+              <p className="text-sm text-muted-foreground">
+                No expenses in this wallet for the selected period.
+              </p>
+            </SoftCard>
+          )}
+        </>
+      )}
 
       <UpcomingRecurringSection recurring={upcomingRecurring} />
 

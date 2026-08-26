@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/layout/Sidebar"
 import { BottomNav } from "@/components/layout/BottomNav"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
+import { OnboardingWrapper } from "@/components/layout/OnboardingWrapper"
 
 const Login = lazy(() => import("@/pages/Login"))
 const Register = lazy(() => import("@/pages/Register"))
@@ -34,21 +35,23 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <ProfileProvider>
-                    <div className="min-h-screen bg-background">
-                      <Sidebar />
-                      <main id="main-content" tabIndex={-1} className="lg:pl-[240px]">
-                        <Routes>
-                          <Route path="/" element={<Dashboard />} />
-                          <Route path="/transactions" element={<Transactions />} />
-                          <Route path="/recurring" element={<Recurring />} />
-                          <Route path="/settings" element={<Settings />} />
-                          <Route path="/settings/categories" element={<Categories />} />
-                          <Route path="/settings/wallets" element={<Wallets />} />
-                          <Route path="/settings/budgets" element={<Budgets />} />
-                        </Routes>
-                      </main>
-                      <BottomNav />
-                    </div>
+                    <OnboardingWrapper>
+                      <div className="min-h-screen bg-background">
+                        <Sidebar />
+                        <main id="main-content" tabIndex={-1} className="lg:pl-[240px]">
+                          <Routes>
+                            <Route path="/" element={<Dashboard />} />
+                            <Route path="/transactions" element={<Transactions />} />
+                            <Route path="/recurring" element={<Recurring />} />
+                            <Route path="/settings" element={<Settings />} />
+                            <Route path="/settings/categories" element={<Categories />} />
+                            <Route path="/settings/wallets" element={<Wallets />} />
+                            <Route path="/settings/budgets" element={<Budgets />} />
+                          </Routes>
+                        </main>
+                        <BottomNav />
+                      </div>
+                    </OnboardingWrapper>
                   </ProfileProvider>
                 </ProtectedRoute>
               }

@@ -38,3 +38,16 @@ export function formatDate(date: string): string {
 export function getCurrencySymbol(code: string): string {
   return CURRENCIES.find((c) => c.code === code)?.symbol ?? code
 }
+
+export function formatAmount(amount: number): string {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
+export function formatAmountCompact(amount: number): string {
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M`
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)}k`
+  return formatAmount(amount)
+}
